@@ -1,5 +1,18 @@
 import type { ElementRenderConfig } from '../types/reaction';
 
+export const CATEGORY_COLORS: Record<string, string> = {
+  'diatomic nonmetal': '#3b82f6',
+  'polyatomic nonmetal': '#60a5fa',
+  'noble gas': '#a855f7',
+  'alkali metal': '#ef4444',
+  'alkaline earth metal': '#f97316',
+  'metalloid': '#10b981',
+  'post-transition metal': '#14b8a6',
+  'transition metal': '#eab308',
+  'lanthanide': '#ec4899',
+  'actinide': '#f43f5e',
+};
+
 export const ELEMENT_CONFIGS: Record<string, ElementRenderConfig> = {
   H: { color: '#FFFFFF', radius: 0.28, name: 'Hydrogen' },
   C: { color: '#909090', radius: 0.48, name: 'Carbon' },
@@ -27,4 +40,14 @@ export const getElementConfig = (elementSymbol: string, customCpk?: string): Ele
     return { ...base, color: customCpk };
   }
   return base;
+};
+
+export const getCategoryColor = (category: string): string => {
+  const cat = category.toLowerCase().trim();
+  for (const [key, color] of Object.entries(CATEGORY_COLORS)) {
+    if (cat.includes(key)) {
+      return color;
+    }
+  }
+  return '#64748b'; // default slate color
 };

@@ -2,6 +2,20 @@ from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 
 
+class ElementData(BaseModel):
+    atomic_number: int
+    symbol: str
+    name: str
+    atomic_mass: Optional[float] = None
+    group: Optional[int] = None
+    period: Optional[int] = None
+    category: str = "unknown"
+    electron_configuration: Optional[str] = ""
+    shells: List[int] = Field(default_factory=list)
+    cpk: str = "#CCCCCC"
+    summary: Optional[str] = ""
+
+
 class ReactantOrProduct(BaseModel):
     name: str
     smiles: str

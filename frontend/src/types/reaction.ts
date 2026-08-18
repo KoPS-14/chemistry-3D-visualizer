@@ -1,3 +1,17 @@
+export interface ElementData {
+  atomic_number: number;
+  symbol: string;
+  name: string;
+  atomic_mass?: number | null;
+  group?: number | null;
+  period?: number | null;
+  category: string;
+  electron_configuration?: string;
+  shells: number[];
+  cpk: string;
+  summary?: string;
+}
+
 export interface AtomData {
   index: number;
   element: string;

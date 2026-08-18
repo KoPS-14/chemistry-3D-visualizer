@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from app.core.config import settings
 
@@ -9,6 +9,35 @@ logger = logging.getLogger(__name__)
 
 
 class LookupService:
+    @staticmethod
+    def get_all_elements() -> List[Dict[str, Any]]:
+        file_path = settings.DATA_DIR / "elements" / "periodic_table.json"
+        if file_path.exists():
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    # Convert dict values to list sorted by atomic_number
+                    elements = list(data.values())
+                    elements.sort(key=lambda x: x.get("atomic_number", 0))
+                    return elements
+            except Exception as e:
+                logger.error(f"Error reading periodic_table.json: {e}")
+        return []
+
+    @staticmethod
+    def get_element_by_atomic_number(atomic_number: int) -> Optional[Dict[str, Any]]:
+        file_path = settings.DATA_DIR / "elements" / "periodic_table.json"
+        if file_path.exists():
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    str_num = str(atomic_number)
+                    if str_num in data:
+                        return data[str_num]
+            except Exception as e:
+                logger.error(f"Error reading element {atomic_number} from periodic_table.json: {e}")
+        return None
+
     @staticmethod
     def find_molecule_by_name(name: str) -> Optional[Dict[str, Any]]:
         if not name:

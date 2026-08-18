@@ -1,4 +1,5 @@
 import logging
+from typing import List
 from fastapi import APIRouter, HTTPException, status
 
 from app.schemas.models import (
@@ -8,6 +9,7 @@ from app.schemas.models import (
     ReactantProduct3DData,
     ReactantOrProduct,
     ReactionConditions,
+    ElementData,
 )
 from app.ai.llm_service import LLMService
 from app.chemistry.rdkit_service import RDKitService
@@ -21,6 +23,35 @@ router = APIRouter()
 @router.get("/health")
 def health_check():
     return {"status": "ok"}
+
+
+@router.get("/elements", response_model=List[ElementData])
+def get_all_elements():
+    """Returns all 118 periodic table elements"""
+    elements = LookupService.get_all_elements()
+    if not elements:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Periodic table dataset unavailable."
+        )
+    return elements
+
+
+@router.get("/elements/{atomic_number}", response_model=ElementData)
+def get_element_by_number(atomic_number: int):
+    """Returns element by atomic number (1..118)"""
+    if atomic_number < 1 or atomic_number > 118:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Invalid atomic number {atomic_number}. Must be between 1 and 118."
+        )
+    element = LookupService.get_element_by_atomic_number(atomic_number)
+    if not element:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Element with atomic number {atomic_number} not found."
+        )
+    return element
 
 
 @router.post("/visualize", response_model=VisualizeResponse)

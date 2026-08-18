@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { VisualizeResponse } from '../types/reaction';
+import type { VisualizeResponse, ElementData } from '../types/reaction';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -38,6 +38,26 @@ export const visualizeChemistry = async (prompt: string): Promise<VisualizeRespo
       status: 'error',
       message: 'Unexpected network error occurred.',
     };
+  }
+};
+
+export const fetchAllElements = async (): Promise<ElementData[]> => {
+  try {
+    const res = await apiClient.get<ElementData[]>('/elements');
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch elements:', error);
+    return [];
+  }
+};
+
+export const fetchElementByNumber = async (atomicNumber: number): Promise<ElementData | null> => {
+  try {
+    const res = await apiClient.get<ElementData>(`/elements/${atomicNumber}`);
+    return res.data;
+  } catch (error) {
+    console.error(`Failed to fetch element ${atomicNumber}:`, error);
+    return null;
   }
 };
 
