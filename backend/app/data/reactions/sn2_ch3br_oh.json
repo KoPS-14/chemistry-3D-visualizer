@@ -1,0 +1,14 @@
+{
+  "name": "SN2 Substitution of Methyl Bromide with Hydroxide",
+  "reaction_type": "SN2",
+  "description": "Bimolecular nucleophilic substitution (SN2) where hydroxide attacks methyl bromide to yield methanol and bromide ion.",
+  "balanced_equation": "CH3Br + OH- -> CH3OH + Br-",
+  "reactants": [
+    { "name": "Methyl Bromide", "smiles": "CBr" },
+    { "name": "Hydroxide", "smiles": "[OH-]" }
+  ],
+  "products": [
+    { "name": "Methanol", "smiles": "CO" },
+    { "name": "Bromide Ion", "smiles": "[Br-]" }
+  ]
+}

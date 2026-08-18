@@ -1,0 +1,13 @@
+{
+  "name": "Water Formation Reaction",
+  "reaction_type": "WaterFormation",
+  "description": "Exothermic combination reaction of hydrogen and oxygen molecules forming water.",
+  "balanced_equation": "2 H2 + O2 -> 2 H2O",
+  "reactants": [
+    { "name": "Hydrogen", "smiles": "[H][H]" },
+    { "name": "Oxygen", "smiles": "O=O" }
+  ],
+  "products": [
+    { "name": "Water", "smiles": "O" }
+  ]
+}
