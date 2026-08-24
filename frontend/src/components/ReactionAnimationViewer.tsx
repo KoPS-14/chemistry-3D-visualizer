@@ -24,22 +24,21 @@ const ElectronFlowArc: React.FC<{ arc: ElectronFlowArcState }> = ({ arc }) => {
   }, [arc.startPos, arc.controlPos, arc.endPos]);
 
   const tubeGeometry = useMemo(() => {
-    return new THREE.TubeGeometry(curve, 32, 0.04, 8, false);
+    return new THREE.TubeGeometry(curve, 32, 0.035, 8, false);
   }, [curve]);
 
-  // Position of traveling electron pair along the curve
   const ePos = useMemo(() => curve.getPoint(arc.progress), [curve, arc.progress]);
 
   if (arc.opacity < 0.05) return null;
 
   return (
     <group>
-      {/* Glowing Curved Tube for Electron Pair Movement */}
+      {/* Glowing Curved Arc Tube */}
       <mesh geometry={tubeGeometry}>
         <meshStandardMaterial
           color="#38bdf8"
           emissive="#38bdf8"
-          emissiveIntensity={1.2}
+          emissiveIntensity={1.4}
           transparent
           opacity={arc.opacity * 0.85}
         />
@@ -47,20 +46,14 @@ const ElectronFlowArc: React.FC<{ arc: ElectronFlowArcState }> = ({ arc }) => {
 
       {/* Traveling Electron Pair Spheres (e⁻ pair) */}
       <group position={[ePos.x, ePos.y, ePos.z]}>
-        <mesh position={[-0.08, 0, 0]}>
-          <sphereGeometry args={[0.09, 16, 16]} />
-          <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={1.5} />
+        <mesh position={[-0.07, 0, 0]}>
+          <sphereGeometry args={[0.08, 16, 16]} />
+          <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={1.6} />
         </mesh>
-        <mesh position={[0.08, 0, 0]}>
-          <sphereGeometry args={[0.09, 16, 16]} />
-          <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={1.5} />
+        <mesh position={[0.07, 0, 0]}>
+          <sphereGeometry args={[0.08, 16, 16]} />
+          <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={1.6} />
         </mesh>
-
-        <Html distanceFactor={12} position={[0, 0.4, 0]} center>
-          <div className="bg-cyan-950/90 text-cyan-300 font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-cyan-400/60 shadow-lg pointer-events-none whitespace-nowrap animate-pulse">
-            e⁻ pair transfer
-          </div>
-        </Html>
       </group>
     </group>
   );
@@ -74,7 +67,6 @@ const AnimatedReactionScene: React.FC<{
 }> = ({ reaction, progress, wireframe = false, controlsRef }) => {
   const animState = useMemo(() => calculateAnimationFrameState(reaction, progress), [reaction, progress]);
 
-  // Camera setup: Centered to view full horizontal textbook reaction equation
   useEffect(() => {
     if (controlsRef.current) {
       controlsRef.current.target.set(0, 0, 0);
@@ -90,37 +82,29 @@ const AnimatedReactionScene: React.FC<{
       <directionalLight position={[-10, -10, -10]} intensity={0.5} />
       <pointLight position={[0, 0, 0]} intensity={0.8} color="#38bdf8" />
 
-      {/* Transition State Activated Complex Detailed Annotation Overlay */}
-      {animState.transitionAnnotation && (
+      {/* 3D Transition State Activated Complex Glow Ring (Completely unobstructive, no hovering cards!) */}
+      {animState.isTransitionStateActive && (
         <group position={[0, 0, 0]}>
           <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[2.2, 2.4, 32]} />
-            <meshBasicMaterial color="#f59e0b" opacity={0.7} transparent side={THREE.DoubleSide} />
+            <ringGeometry args={[2.3, 2.5, 32]} />
+            <meshBasicMaterial color="#f59e0b" opacity={0.65} transparent side={THREE.DoubleSide} />
           </mesh>
-          <Html position={[0, 2.8, 0]} center distanceFactor={14}>
-            <div
-              className="bg-slate-900/95 border border-amber-500/70 p-3 rounded-xl shadow-2xl flex flex-col gap-1 text-center pointer-events-none min-w-[260px]"
-              style={{ opacity: animState.transitionAnnotation.opacity }}
-            >
-              <div className="text-xs font-bold text-amber-300 font-mono flex items-center justify-center gap-1.5">
-                <span>⚡</span>
-                <span>{animState.transitionAnnotation.title}</span>
-              </div>
-              <p className="text-[11px] text-slate-200 font-medium">{animState.transitionAnnotation.subtitle}</p>
-              <div className="grid grid-cols-2 gap-1.5 mt-1 pt-1.5 border-t border-slate-800 text-[10px] font-mono">
-                <span className="bg-amber-950/80 text-amber-300 p-1 rounded border border-amber-700/60">
-                  {animState.transitionAnnotation.breakingBondText}
-                </span>
-                <span className="bg-cyan-950/80 text-cyan-300 p-1 rounded border border-cyan-700/60">
-                  {animState.transitionAnnotation.formingBondText}
-                </span>
-              </div>
-            </div>
+
+          {/* Partial Charge Badges (δ⁻) on Nucleophile & Leaving Group */}
+          <Html position={[-1.6, 1.0, 0]} center distanceFactor={14}>
+            <span className="text-xs font-mono font-bold text-cyan-300 bg-slate-900/90 px-1.5 py-0.5 rounded border border-cyan-500/50 shadow pointer-events-none select-none">
+              δ⁻
+            </span>
+          </Html>
+          <Html position={[1.6, 1.0, 0]} center distanceFactor={14}>
+            <span className="text-xs font-mono font-bold text-amber-300 bg-slate-900/90 px-1.5 py-0.5 rounded border border-amber-500/50 shadow pointer-events-none select-none">
+              δ⁻
+            </span>
           </Html>
         </group>
       )}
 
-      {/* Curved Electron Arc Mechanism (Curved Arrow Pair Flow) */}
+      {/* Curved Electron Arc Mechanism */}
       {animState.electronArc && <ElectronFlowArc arc={animState.electronArc} />}
 
       {/* Render Equation Symbols (+ and -> Arrow) Inline with Bottom Formula Label Row */}
@@ -272,6 +256,7 @@ export const ReactionAnimationViewer: React.FC<ReactionAnimationViewerProps> = (
   wireframe = false,
 }) => {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
+  const animState = useMemo(() => calculateAnimationFrameState(reaction, progress), [reaction, progress]);
 
   const handleResetCamera = () => {
     if (controlsRef.current) {
@@ -283,6 +268,28 @@ export const ReactionAnimationViewer: React.FC<ReactionAnimationViewerProps> = (
 
   return (
     <div className="relative w-full h-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
+      {/* Sleek Floating Top HUD Banner for Transition State Explanations (Outside 3D Viewport!) */}
+      {animState.transitionAnnotation && (
+        <div
+          className="absolute top-3 left-1/2 transform -translate-x-1/2 bg-slate-900/90 border border-amber-500/60 rounded-xl px-4 py-2 text-center shadow-2xl backdrop-blur-md z-20 pointer-events-none transition-opacity duration-300 max-w-lg w-11/12"
+          style={{ opacity: animState.transitionAnnotation.opacity }}
+        >
+          <div className="text-xs font-bold text-amber-300 font-mono flex items-center justify-center gap-1.5">
+            <span>⚡</span>
+            <span>{animState.transitionAnnotation.title}</span>
+          </div>
+          <p className="text-[11px] text-slate-200 font-medium mt-0.5">{animState.transitionAnnotation.subtitle}</p>
+          <div className="flex items-center justify-center gap-3 mt-1 text-[10px] font-mono">
+            <span className="text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-700/60">
+              {animState.transitionAnnotation.breakingBondText}
+            </span>
+            <span className="text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-700/60">
+              {animState.transitionAnnotation.formingBondText}
+            </span>
+          </div>
+        </div>
+      )}
+
       <Canvas camera={{ position: [0, 0, 16], fov: 45 }} gl={{ antialias: true }}>
         <AnimatedReactionScene
           reaction={reaction}
@@ -293,13 +300,13 @@ export const ReactionAnimationViewer: React.FC<ReactionAnimationViewerProps> = (
       </Canvas>
 
       {/* Label: 3D Textbook Reaction Equation */}
-      <div className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded border border-slate-800 text-[11px] font-mono text-cyan-400">
+      <div className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded border border-slate-800 text-[11px] font-mono text-cyan-400 z-10">
         Textbook Reaction Layout ({reaction.balanced_equation || reaction.reaction_type})
       </div>
 
       <button
         onClick={handleResetCamera}
-        className="absolute top-4 right-4 bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-slate-700 backdrop-blur-sm transition flex items-center gap-1.5 shadow z-10 cursor-pointer"
+        className="absolute top-4 right-4 bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-slate-700 backdrop-blur-sm transition flex items-center gap-1.5 shadow z-20 cursor-pointer"
         title="Reset Camera View"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
