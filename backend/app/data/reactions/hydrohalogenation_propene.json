@@ -1,0 +1,28 @@
+{
+  "reaction_id": "hydrohalogenation_propene",
+  "name": "Markovnikov Hydrochlorination of Propene",
+  "reaction_type": "Addition",
+  "description": "Electrophilic addition of HCl to propene yielding 2-chloropropane following Markovnikov rule.",
+  "balanced_equation": "C3H6 + HCl -> C3H7Cl",
+  "reactants": [
+    {
+      "name": "Propene",
+      "smiles": "CC=C"
+    },
+    {
+      "name": "Hydrogen Chloride",
+      "smiles": "Cl"
+    }
+  ],
+  "products": [
+    {
+      "name": "2-Chloropropane",
+      "smiles": "CC(C)Cl"
+    }
+  ],
+  "stages": [
+    "Protonation to Secondary Carbocation",
+    "Chloride Attack",
+    "2-Chloropropane Formation"
+  ]
+}

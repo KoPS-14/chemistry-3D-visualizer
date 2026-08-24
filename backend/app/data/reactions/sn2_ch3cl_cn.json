@@ -1,0 +1,32 @@
+{
+  "reaction_id": "sn2_ch3cl_cn",
+  "name": "SN2 Cyanation of Chloromethane",
+  "reaction_type": "SN2",
+  "description": "Nucleophilic attack of cyanide ion on chloromethane forming acetonitrile.",
+  "balanced_equation": "CH3Cl + CN- -> CH3CN + Cl-",
+  "reactants": [
+    {
+      "name": "Chloromethane",
+      "smiles": "CCl"
+    },
+    {
+      "name": "Cyanide Ion",
+      "smiles": "[C]#N"
+    }
+  ],
+  "products": [
+    {
+      "name": "Acetonitrile",
+      "smiles": "CC#N"
+    },
+    {
+      "name": "Chloride Ion",
+      "smiles": "[Cl-]"
+    }
+  ],
+  "stages": [
+    "Cyanide Approach",
+    "Transition State",
+    "Chloride Departure"
+  ]
+}

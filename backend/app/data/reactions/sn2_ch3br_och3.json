@@ -1,0 +1,32 @@
+{
+  "reaction_id": "sn2_ch3br_och3",
+  "name": "Williamson Ether Synthesis (SN2)",
+  "reaction_type": "SN2",
+  "description": "Synthesis of dimethyl ether from bromomethane and methoxide ion via SN2 mechanism.",
+  "balanced_equation": "CH3Br + CH3O- -> CH3OCH3 + Br-",
+  "reactants": [
+    {
+      "name": "Bromomethane",
+      "smiles": "CBr"
+    },
+    {
+      "name": "Methoxide Ion",
+      "smiles": "C[O-]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Dimethyl Ether",
+      "smiles": "COC"
+    },
+    {
+      "name": "Bromide Ion",
+      "smiles": "[Br-]"
+    }
+  ],
+  "stages": [
+    "Methoxide Approach",
+    "Pentacoordinate Transition State",
+    "Ether Formation"
+  ]
+}

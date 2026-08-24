@@ -1,0 +1,28 @@
+{
+  "reaction_id": "acid_base_hcl_ammonia",
+  "name": "Gas-Phase Ammonia & Hydrogen Chloride Reaction",
+  "reaction_type": "AcidBase",
+  "description": "Gas-phase acid-base reaction forming dense white ammonium chloride smoke.",
+  "balanced_equation": "HCl + NH3 -> NH4Cl",
+  "reactants": [
+    {
+      "name": "Hydrogen Chloride",
+      "smiles": "Cl"
+    },
+    {
+      "name": "Ammonia",
+      "smiles": "N"
+    }
+  ],
+  "products": [
+    {
+      "name": "Ammonium Chloride",
+      "smiles": "[NH4+].[Cl-]"
+    }
+  ],
+  "stages": [
+    "Gas Diffusion",
+    "Proton Transfer",
+    "Ammonium Chloride Salt Crystal"
+  ]
+}

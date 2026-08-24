@@ -1,0 +1,36 @@
+{
+  "reaction_id": "e2_bromoethane_oh",
+  "name": "E2 Elimination of Bromoethane",
+  "reaction_type": "Elimination",
+  "description": "Bimolecular E2 elimination where hydroxide extracts beta-proton as bromide leaves, forming ethylene.",
+  "balanced_equation": "CH3CH2Br + OH- -> CH2=CH2 + H2O + Br-",
+  "reactants": [
+    {
+      "name": "Bromoethane",
+      "smiles": "CCBr"
+    },
+    {
+      "name": "Hydroxide",
+      "smiles": "[OH-]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Ethylene",
+      "smiles": "C=C"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    },
+    {
+      "name": "Bromide Ion",
+      "smiles": "[Br-]"
+    }
+  ],
+  "stages": [
+    "Anti-periplanar Alignment",
+    "Beta-Proton Abstraction & C=C Formation",
+    "Bromide Departure"
+  ]
+}

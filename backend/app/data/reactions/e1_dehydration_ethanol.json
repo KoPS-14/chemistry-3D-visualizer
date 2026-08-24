@@ -1,0 +1,28 @@
+{
+  "reaction_id": "e1_dehydration_ethanol",
+  "name": "Acid-Catalyzed Dehydration of Ethanol (E1)",
+  "reaction_type": "Elimination",
+  "description": "E1 dehydration of ethanol via carbocation intermediate to yield ethylene gas.",
+  "balanced_equation": "C2H5OH -> C2H4 + H2O",
+  "reactants": [
+    {
+      "name": "Ethanol",
+      "smiles": "CCO"
+    }
+  ],
+  "products": [
+    {
+      "name": "Ethylene",
+      "smiles": "C=C"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "Hydroxyl Protonation",
+    "Water Departure (Carbocation)",
+    "Deprotonation to Ethylene"
+  ]
+}

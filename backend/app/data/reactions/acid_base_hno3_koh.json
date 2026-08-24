@@ -1,0 +1,32 @@
+{
+  "reaction_id": "acid_base_hno3_koh",
+  "name": "Nitric Acid & Potassium Hydroxide Neutralization",
+  "reaction_type": "AcidBase",
+  "description": "Neutralization of strong nitric acid with potassium hydroxide yielding potassium nitrate and water.",
+  "balanced_equation": "HNO3 + KOH -> KNO3 + H2O",
+  "reactants": [
+    {
+      "name": "Nitric Acid",
+      "smiles": "O=[N+]([O-])O"
+    },
+    {
+      "name": "Potassium Hydroxide",
+      "smiles": "[K+].[OH-]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Potassium Nitrate",
+      "smiles": "[K+].[O-][N+](=O)[O-]"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "Hydronium Collision",
+    "Water Neutralization",
+    "Potassium Nitrate Solvation"
+  ]
+}

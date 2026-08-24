@@ -1,0 +1,32 @@
+{
+  "reaction_id": "esterification_acetic_ethanol",
+  "name": "Fischer Esterification of Acetic Acid & Ethanol",
+  "reaction_type": "Substitution",
+  "description": "Acid-catalyzed condensation of acetic acid and ethanol forming sweet-smelling ethyl acetate ester.",
+  "balanced_equation": "CH3COOH + C2H5OH -> CH3COOC2H5 + H2O",
+  "reactants": [
+    {
+      "name": "Acetic Acid",
+      "smiles": "CC(=O)O"
+    },
+    {
+      "name": "Ethanol",
+      "smiles": "CCO"
+    }
+  ],
+  "products": [
+    {
+      "name": "Ethyl Acetate",
+      "smiles": "CC(=O)OCC"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "Carbonyl Protonation",
+    "Ethanol Addition",
+    "Water Elimination & Ester Formation"
+  ]
+}

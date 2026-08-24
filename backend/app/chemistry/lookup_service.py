@@ -16,7 +16,6 @@ class LookupService:
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    # Convert dict values to list sorted by atomic_number
                     elements = list(data.values())
                     elements.sort(key=lambda x: x.get("atomic_number", 0))
                     return elements
@@ -61,23 +60,37 @@ class LookupService:
         if not rxn_dir.exists():
             return None
 
-        key_terms = []
-        if reaction_type:
-            key_terms.append(reaction_type.lower())
-        if name:
-            key_terms.append(name.lower())
+        query = (name or reaction_type or "").lower().strip()
+        if not query:
+            return None
+
+        query_clean = query.replace("-", " ").strip()
+        best_match = None
+        highest_score = 0
 
         for file_path in rxn_dir.glob("*.json"):
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    rxn_t = str(data.get("reaction_type", "")).lower()
-                    rxn_n = str(data.get("name", "")).lower()
-                    
-                    for term in key_terms:
-                        if term in rxn_t or term in rxn_n or rxn_t in term:
-                            return data
+                    rxn_id = str(data.get("reaction_id", "")).lower().replace("-", " ")
+                    rxn_t = str(data.get("reaction_type", "")).lower().replace("-", " ")
+                    rxn_n = str(data.get("name", "")).lower().replace("-", " ")
+
+                    score = 0
+                    if query_clean == rxn_n or query_clean == rxn_id:
+                        score = 100
+                    elif rxn_n in query_clean or query_clean in rxn_n:
+                        score = 80
+                    elif rxn_t in query_clean or query_clean in rxn_t:
+                        score = 60
+
+                    if score > highest_score:
+                        highest_score = score
+                        best_match = data
             except Exception as e:
                 logger.error(f"Error reading reaction JSON file {file_path}: {e}")
+
+        if highest_score >= 50:
+            return best_match
 
         return None

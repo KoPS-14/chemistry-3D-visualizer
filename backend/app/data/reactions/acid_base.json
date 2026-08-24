@@ -1,14 +1,15 @@
 {
+  "reaction_id": "acid_base",
   "name": "Acid-Base Neutralization",
   "reaction_type": "AcidBase",
-  "description": "Neutralization reaction of hydrochloric acid and sodium hydroxide forming sodium chloride salt and water.",
-  "balanced_equation": "HCl + NaOH -> NaCl + H2O",
+  "description": "Neutralization reaction of hydrochloric acid and hydroxide ion forming chloride ion and water.",
+  "balanced_equation": "HCl + OH- -> Cl- + H2O",
   "reactants": [
     { "name": "Hydrochloric Acid", "smiles": "Cl" },
-    { "name": "Sodium Hydroxide", "smiles": "[Na+].[OH-]" }
+    { "name": "Hydroxide", "smiles": "[OH-]" }
   ],
   "products": [
-    { "name": "Sodium Chloride", "smiles": "[Na+].[Cl-]" },
+    { "name": "Chloride Ion", "smiles": "[Cl-]" },
     { "name": "Water", "smiles": "O" }
   ]
 }

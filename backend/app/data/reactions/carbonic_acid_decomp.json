@@ -1,0 +1,28 @@
+{
+  "reaction_id": "carbonic_acid_decomp",
+  "name": "Carbonic Acid Decomposition",
+  "reaction_type": "Decomposition",
+  "description": "Reversible decomposition of aqueous carbonic acid into water and carbon dioxide gas.",
+  "balanced_equation": "H2CO3 -> H2O + CO2",
+  "reactants": [
+    {
+      "name": "Carbonic Acid",
+      "smiles": "C(=O)(O)O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Water",
+      "smiles": "O"
+    },
+    {
+      "name": "Carbon Dioxide",
+      "smiles": "O=C=O"
+    }
+  ],
+  "stages": [
+    "Intramolecular Proton Shift",
+    "C-O Cleavage",
+    "CO2 Gas Release"
+  ]
+}

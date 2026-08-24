@@ -58,6 +58,22 @@ export interface ReactionConditions {
   concentration?: string | null;
 }
 
+export interface ReactionKeyframe {
+  progress: number;
+  stage_name: string;
+  description: string;
+  reactant_offset: [number, number, number];
+  product_offset: [number, number, number];
+  bond_stretch: number;
+  transition_state_active: boolean;
+}
+
+export interface ReactionAnimationData {
+  class_name: string;
+  stages: string[];
+  keyframes: ReactionKeyframe[];
+}
+
 export interface ReactionData {
   name: string;
   reaction_type: string;
@@ -66,6 +82,8 @@ export interface ReactionData {
   reactants: ReactantProduct3DData[];
   products: ReactantProduct3DData[];
   conditions?: ReactionConditions;
+  stages?: string[];
+  animation_template?: ReactionAnimationData;
 }
 
 export interface VisualizeResponse {

@@ -1,0 +1,32 @@
+{
+  "reaction_id": "combustion_propane",
+  "name": "Propane Complete Combustion",
+  "reaction_type": "Combustion",
+  "description": "High-energy combustion of propane gas used in burners and heating.",
+  "balanced_equation": "C3H8 + 5 O2 -> 3 CO2 + 4 H2O",
+  "reactants": [
+    {
+      "name": "Propane",
+      "smiles": "CCC"
+    },
+    {
+      "name": "Oxygen Gas",
+      "smiles": "O=O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Carbon Dioxide",
+      "smiles": "O=C=O"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "Hydrocarbon Oxidation",
+    "Chain Radical Propagation",
+    "CO2 & Water Release"
+  ]
+}

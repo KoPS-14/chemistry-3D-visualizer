@@ -1,0 +1,28 @@
+{
+  "reaction_id": "halogenation_ethylene",
+  "name": "Bromination of Ethylene",
+  "reaction_type": "Addition",
+  "description": "Electrophilic addition of bromine across ethylene double bond forming 1,2-dibromoethane via a cyclic bromonium intermediate.",
+  "balanced_equation": "C2H4 + Br2 -> C2H4Br2",
+  "reactants": [
+    {
+      "name": "Ethylene",
+      "smiles": "C=C"
+    },
+    {
+      "name": "Bromine",
+      "smiles": "BrBr"
+    }
+  ],
+  "products": [
+    {
+      "name": "1,2-Dibromoethane",
+      "smiles": "CC(Br)Br"
+    }
+  ],
+  "stages": [
+    "Bromonium Ion Formation",
+    "Backside Ring Opening",
+    "1,2-Dibromoethane Formation"
+  ]
+}

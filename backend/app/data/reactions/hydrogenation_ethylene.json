@@ -1,0 +1,28 @@
+{
+  "reaction_id": "hydrogenation_ethylene",
+  "name": "Catalytic Hydrogenation of Ethylene",
+  "reaction_type": "Addition",
+  "description": "Electrophilic/catalytic syn-addition of hydrogen across the ethylene double bond to form ethane.",
+  "balanced_equation": "C2H4 + H2 -> C2H6",
+  "reactants": [
+    {
+      "name": "Ethylene",
+      "smiles": "C=C"
+    },
+    {
+      "name": "Hydrogen Gas",
+      "smiles": "[H][H]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Ethane",
+      "smiles": "CC"
+    }
+  ],
+  "stages": [
+    "Alkene & H2 Adsorption",
+    "C=C Pi-Bond Opening",
+    "C-H Bond Formation"
+  ]
+}

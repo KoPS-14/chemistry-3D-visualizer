@@ -1,0 +1,32 @@
+{
+  "reaction_id": "sn2_ch3cl_i",
+  "name": "SN2 Finkelstein Substitution of Methyl Chloride with Iodide",
+  "reaction_type": "SN2",
+  "description": "Nucleophilic substitution of methyl chloride by iodide ion via nucleophilic backside attack.",
+  "balanced_equation": "CH3Cl + I- -> CH3I + Cl-",
+  "reactants": [
+    {
+      "name": "Methyl Chloride",
+      "smiles": "CCl"
+    },
+    {
+      "name": "Iodide Ion",
+      "smiles": "[I-]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Methyl Iodide",
+      "smiles": "CI"
+    },
+    {
+      "name": "Chloride Ion",
+      "smiles": "[Cl-]"
+    }
+  ],
+  "stages": [
+    "Backside Attack",
+    "C-Cl Stretching & C-I Forming",
+    "Walden Inversion"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "reaction_id": "acid_base_acetate_ammonia",
+  "name": "Acetic Acid & Ammonia Neutralization",
+  "reaction_type": "AcidBase",
+  "description": "Br\u00f8nsted-Lowry acid-base proton transfer between acetic acid and ammonia forming ammonium acetate salt.",
+  "balanced_equation": "CH3COOH + NH3 -> CH3COO- + NH4+",
+  "reactants": [
+    {
+      "name": "Acetic Acid",
+      "smiles": "CC(=O)O"
+    },
+    {
+      "name": "Ammonia",
+      "smiles": "N"
+    }
+  ],
+  "products": [
+    {
+      "name": "Acetate Ion",
+      "smiles": "CC(=O)[O-]"
+    },
+    {
+      "name": "Ammonium Ion",
+      "smiles": "[NH4+]"
+    }
+  ],
+  "stages": [
+    "Ammonia Approach",
+    "Proton Transfer to Ammonia",
+    "Ion Pair Complex"
+  ]
+}

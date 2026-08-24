@@ -1,13 +1,28 @@
 {
+  "reaction_id": "water_formation",
   "name": "Water Formation Reaction",
   "reaction_type": "WaterFormation",
-  "description": "Exothermic combination reaction of hydrogen and oxygen molecules forming water.",
+  "description": "Exothermic combination of hydrogen and oxygen gas forming water molecules.",
   "balanced_equation": "2 H2 + O2 -> 2 H2O",
   "reactants": [
-    { "name": "Hydrogen", "smiles": "[H][H]" },
-    { "name": "Oxygen", "smiles": "O=O" }
+    {
+      "name": "Hydrogen Gas",
+      "smiles": "[H][H]"
+    },
+    {
+      "name": "Oxygen Gas",
+      "smiles": "O=O"
+    }
   ],
   "products": [
-    { "name": "Water", "smiles": "O" }
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "Reactant Collision",
+    "O-O & H-H Bond Cleavage",
+    "O-H Bond Formation"
   ]
 }

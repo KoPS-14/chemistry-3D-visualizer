@@ -1,0 +1,32 @@
+{
+  "reaction_id": "combustion_methane",
+  "name": "Methane Complete Combustion",
+  "reaction_type": "Combustion",
+  "description": "Highly exothermic oxidation of methane with oxygen producing carbon dioxide and water vapor.",
+  "balanced_equation": "CH4 + 2 O2 -> CO2 + 2 H2O",
+  "reactants": [
+    {
+      "name": "Methane",
+      "smiles": "C"
+    },
+    {
+      "name": "Oxygen Gas",
+      "smiles": "O=O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Carbon Dioxide",
+      "smiles": "O=C=O"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "Ignition & C-H Cleavage",
+    "Oxygen Radical Addition",
+    "CO2 & H2O Product Formation"
+  ]
+}

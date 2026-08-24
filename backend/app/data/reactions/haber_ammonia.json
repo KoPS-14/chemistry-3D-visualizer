@@ -1,0 +1,28 @@
+{
+  "reaction_id": "haber_ammonia",
+  "name": "Haber-Bosch Ammonia Synthesis",
+  "reaction_type": "Synthesis",
+  "description": "Industrial catalytic synthesis of ammonia from nitrogen and hydrogen gas under high pressure.",
+  "balanced_equation": "N2 + 3 H2 -> 2 NH3",
+  "reactants": [
+    {
+      "name": "Nitrogen Gas",
+      "smiles": "N#N"
+    },
+    {
+      "name": "Hydrogen Gas",
+      "smiles": "[H][H]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Ammonia",
+      "smiles": "N"
+    }
+  ],
+  "stages": [
+    "Iron Catalyst Adsorption",
+    "N#N Triple Bond Cleavage",
+    "Sequential N-H Hydrogenation"
+  ]
+}

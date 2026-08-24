@@ -1,0 +1,32 @@
+{
+  "reaction_id": "methane_chlorination",
+  "name": "Free Radical Chlorination of Methane",
+  "reaction_type": "Substitution",
+  "description": "Photochemical free-radical substitution of methane with chlorine forming chloromethane and HCl.",
+  "balanced_equation": "CH4 + Cl2 -> CH3Cl + HCl",
+  "reactants": [
+    {
+      "name": "Methane",
+      "smiles": "C"
+    },
+    {
+      "name": "Chlorine Gas",
+      "smiles": "ClCl"
+    }
+  ],
+  "products": [
+    {
+      "name": "Chloromethane",
+      "smiles": "CCl"
+    },
+    {
+      "name": "Hydrogen Chloride",
+      "smiles": "Cl"
+    }
+  ],
+  "stages": [
+    "Cl-Cl Homolytic Photolysis",
+    "Methyl Radical Abstraction",
+    "Chloromethane Formation"
+  ]
+}

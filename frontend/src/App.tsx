@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MoleculeViewer } from './components/MoleculeViewer';
 import { PromptInput } from './components/PromptInput';
 import { Controls } from './components/Controls';
@@ -6,6 +6,9 @@ import { PeriodicTable } from './components/PeriodicTable';
 import { ElementInfoPanel } from './components/ElementInfoPanel';
 import { ElementAtomViewer } from './components/ElementAtomViewer';
 import { ElementSearch } from './components/ElementSearch';
+import { ReactionAnimationViewer } from './components/ReactionAnimationViewer';
+import { ReactionTimelineControls } from './components/ReactionTimelineControls';
+import { calculateAnimationFrameState } from './three/animateReaction';
 import { visualizeChemistry, fetchAllElements, checkHealth } from './services/api';
 import type { MoleculeData, ReactionData, ReactantProduct3DData, VisualizeResponse, ElementData } from './types/reaction';
 
@@ -20,6 +23,13 @@ export const App: React.FC = () => {
   const [molecule, setMolecule] = useState<MoleculeData | null>(null);
   const [reaction, setReaction] = useState<ReactionData | null>(null);
   const [selectedComponent, setSelectedComponent] = useState<ReactantProduct3DData | null>(null);
+
+  // Reaction Animation Playback state
+  const [isPlayingAnim, setIsPlayingAnim] = useState<boolean>(false);
+  const [animProgress, setAnimProgress] = useState<number>(0.0);
+  const [animSpeed, setAnimSpeed] = useState<number>(1.0);
+  const animFrameRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -36,16 +46,52 @@ export const App: React.FC = () => {
     fetchAllElements().then((list) => {
       setElementsList(list);
       if (list.length > 0) {
-        // Default to Hydrogen (1)
         setSelectedElement(list[0]);
       }
     });
   }, []);
 
+  // Animation frame playback loop
+  useEffect(() => {
+    if (!isPlayingAnim) {
+      lastTimeRef.current = null;
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+      }
+      return;
+    }
+
+    const animate = (time: number) => {
+      if (lastTimeRef.current !== null) {
+        const delta = (time - lastTimeRef.current) / 1000;
+        setAnimProgress((prev) => {
+          const next = prev + delta * 0.15 * animSpeed;
+          if (next >= 1.0) {
+            setIsPlayingAnim(false);
+            return 1.0;
+          }
+          return next;
+        });
+      }
+      lastTimeRef.current = time;
+      animFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animFrameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+      }
+    };
+  }, [isPlayingAnim, animSpeed]);
+
   const handlePromptSubmit = async (promptText: string) => {
     setIsLoading(true);
     setErrorMsg(null);
     setExplanation(null);
+    setIsPlayingAnim(false);
+    setAnimProgress(0.0);
 
     try {
       const res: VisualizeResponse = await visualizeChemistry(promptText);
@@ -61,6 +107,7 @@ export const App: React.FC = () => {
         } else if (res.request_type === 'reaction') {
           const rxnData = res.data as ReactionData;
           setReaction(rxnData);
+          setIsPlayingAnim(true);
 
           if (rxnData.reactants && rxnData.reactants.length > 0) {
             setSelectedComponent(rxnData.reactants[0]);
@@ -96,6 +143,11 @@ export const App: React.FC = () => {
     setMolecule(comp.molecule_data);
   };
 
+  // Compute current animation state parameters for UI
+  const animFrameState = reaction
+    ? calculateAnimationFrameState(reaction, animProgress)
+    : null;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
       {/* Header Bar */}
@@ -110,7 +162,7 @@ export const App: React.FC = () => {
             <h1 className="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
               ChemAI 3D
             </h1>
-            <p className="text-xs text-slate-400">3D Periodic Table & Chemistry Visualizer</p>
+            <p className="text-xs text-slate-400">3D Periodic Table & Procedural Reaction Visualizer</p>
           </div>
         </div>
 
@@ -130,7 +182,7 @@ export const App: React.FC = () => {
             onClick={() => {
               setActiveTab('molecules');
               if (!molecule && !reaction) {
-                handlePromptSubmit('Show ethanol in 3D');
+                handlePromptSubmit('Show SN2 reaction of methyl bromide with hydroxide');
               }
             }}
             className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
@@ -194,7 +246,7 @@ export const App: React.FC = () => {
         )}
 
         {/* ========================================================= */}
-        {/* MODE 2: MOLECULE & REACTION VISUALIZER (PRESERVED)        */}
+        {/* MODE 2: MOLECULE & REACTION VISUALIZER                    */}
         {/* ========================================================= */}
         {activeTab === 'molecules' && (
           <>
@@ -216,7 +268,7 @@ export const App: React.FC = () => {
               </div>
             )}
 
-            {/* 3D Canvas Main Focus */}
+            {/* 3D Canvas Main Focus: Reaction Animation OR Single Molecule Viewer */}
             <section className="relative h-[480px] md:h-[560px] w-full flex flex-col">
               <div className="absolute top-3 left-3 z-10">
                 <Controls
@@ -227,11 +279,40 @@ export const App: React.FC = () => {
               </div>
 
               <div className="w-full h-full flex-1">
-                <MoleculeViewer molecule={molecule} wireframe={wireframe} />
+                {reaction ? (
+                  <ReactionAnimationViewer reaction={reaction} progress={animProgress} wireframe={wireframe} />
+                ) : (
+                  <MoleculeViewer molecule={molecule} wireframe={wireframe} />
+                )}
               </div>
             </section>
 
-            {/* Reaction Info Section */}
+            {/* Reaction Timeline Controls */}
+            {reaction && animFrameState && (
+              <section>
+                <ReactionTimelineControls
+                  isPlaying={isPlayingAnim}
+                  progress={animProgress}
+                  speed={animSpeed}
+                  currentStageName={animFrameState.currentStageName}
+                  stageDescription={animFrameState.stageDescription}
+                  stages={reaction.stages || reaction.animation_template?.stages || []}
+                  currentStageIndex={animFrameState.currentStageIndex}
+                  onTogglePlay={() => setIsPlayingAnim(!isPlayingAnim)}
+                  onReset={() => {
+                    setIsPlayingAnim(false);
+                    setAnimProgress(0.0);
+                  }}
+                  onProgressChange={(newProgress) => {
+                    setIsPlayingAnim(false);
+                    setAnimProgress(newProgress);
+                  }}
+                  onSpeedChange={(newSpeed) => setAnimSpeed(newSpeed)}
+                />
+              </section>
+            )}
+
+            {/* Reaction Details Section */}
             {reaction && (
               <section className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col gap-4">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -253,13 +334,13 @@ export const App: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Reactants */}
                   <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Reactants (Click to view 3D)</span>
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Reactants (Click to inspect 3D)</span>
                     <div className="flex flex-wrap gap-2">
                       {reaction.reactants.map((r, i) => (
                         <button
                           key={`reactant-${i}`}
                           onClick={() => handleSelectComponent(r)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition flex items-center gap-1.5 ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition flex items-center gap-1.5 cursor-pointer ${
                             selectedComponent?.name === r.name
                               ? 'bg-cyan-600 text-white border-cyan-400 shadow-md shadow-cyan-600/30'
                               : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500'
@@ -274,13 +355,13 @@ export const App: React.FC = () => {
 
                   {/* Products */}
                   <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Products (Click to view 3D)</span>
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Products (Click to inspect 3D)</span>
                     <div className="flex flex-wrap gap-2">
                       {reaction.products.map((p, i) => (
                         <button
                           key={`product-${i}`}
                           onClick={() => handleSelectComponent(p)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition flex items-center gap-1.5 ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition flex items-center gap-1.5 cursor-pointer ${
                             selectedComponent?.name === p.name
                               ? 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-600/30'
                               : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500'
@@ -357,7 +438,7 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/60 py-4 px-6 text-center text-xs text-slate-500">
-        AI-Powered Chemistry Visualization System • 118-Element 3D Periodic Table & RDKit 3D Optimization
+        AI-Powered Chemistry Visualization System • 118-Element 3D Periodic Table & Procedural Reaction Animation Engine
       </footer>
     </div>
   );

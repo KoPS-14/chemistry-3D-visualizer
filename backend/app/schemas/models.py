@@ -91,6 +91,8 @@ class ReactionData(BaseModel):
     reactants: List[ReactantProduct3DData]
     products: List[ReactantProduct3DData]
     conditions: Optional[ReactionConditions] = Field(default_factory=ReactionConditions)
+    stages: Optional[List[str]] = Field(default_factory=list)
+    animation_template: Optional[dict] = None
 
 
 class VisualizeRequest(BaseModel):

@@ -1,0 +1,32 @@
+{
+  "reaction_id": "oxidation_ethanol",
+  "name": "Oxidation of Ethanol to Acetaldehyde",
+  "reaction_type": "Oxidation",
+  "description": "Partial oxidation of ethanol yielding acetaldehyde.",
+  "balanced_equation": "2 C2H5OH + O2 -> 2 CH3CHO + 2 H2O",
+  "reactants": [
+    {
+      "name": "Ethanol",
+      "smiles": "CCO"
+    },
+    {
+      "name": "Oxygen Gas",
+      "smiles": "O=O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Acetaldehyde",
+      "smiles": "CC=O"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "Hydrogen Abstraction",
+    "Carbonyl Formation",
+    "Acetaldehyde Release"
+  ]
+}

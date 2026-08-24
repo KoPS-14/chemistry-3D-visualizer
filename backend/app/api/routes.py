@@ -183,6 +183,10 @@ def visualize_chemistry(payload: VisualizeRequest):
                 )
             )
 
+        from app.chemistry.reaction_templates import get_reaction_animation_template
+        anim_template = get_reaction_animation_template(rxn_type)
+        stages_list = cached_rxn.get("stages", []) if cached_rxn else anim_template.get("stages", [])
+
         rxn_data = ReactionData(
             name=rxn_name,
             reaction_type=rxn_type,
@@ -190,15 +194,17 @@ def visualize_chemistry(payload: VisualizeRequest):
             balanced_equation=equation,
             reactants=reactants_3d,
             products=products_3d,
-            conditions=llm_output.conditions or ReactionConditions()
+            conditions=llm_output.conditions or ReactionConditions(),
+            stages=stages_list,
+            animation_template=anim_template
         )
 
         return VisualizeResponse(
             status="success",
             request_type="reaction",
             data=rxn_data,
-            explanation=f"Parsed reaction '{rxn_name}'. Generated 3D geometries for {len(reactants_3d)} reactant(s) and {len(products_3d)} product(s).",
-            message="Reaction data and 3D component coordinates successfully generated."
+            explanation=f"Parsed reaction '{rxn_name}'. Generated 3D geometries and keyframe animation template for {len(reactants_3d)} reactant(s) and {len(products_3d)} product(s).",
+            message="Reaction data, 3D component coordinates, and animation template successfully generated."
         )
 
     else:

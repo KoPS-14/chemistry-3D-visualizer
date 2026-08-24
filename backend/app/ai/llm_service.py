@@ -127,66 +127,51 @@ class LLMService:
     def _fallback_parse_prompt(prompt: str) -> LLMStructuredOutput:
         lower_prompt = prompt.lower()
 
-        # Check reaction patterns first
-        if "sn2" in lower_prompt or ("methyl bromide" in lower_prompt and "hydroxide" in lower_prompt):
-            return LLMStructuredOutput(
-                request_type="reaction",
-                name="SN2 Reaction of methyl bromide with hydroxide",
-                reaction_type="SN2",
-                reactants=[
-                    ReactantOrProduct(name="methyl bromide", smiles="CBr"),
-                    ReactantOrProduct(name="hydroxide", smiles="[OH-]")
-                ],
-                products=[
-                    ReactantOrProduct(name="methanol", smiles="CO"),
-                    ReactantOrProduct(name="bromide", smiles="[Br-]")
-                ],
-                conditions=ReactionConditions(),
-                confidence=0.95
-            )
+        # Priority reaction matching
+        from app.chemistry.lookup_service import LookupService
+        rxn_match = LookupService.find_reaction(name=lower_prompt, reaction_type=lower_prompt)
 
-        if "water formation" in lower_prompt or ("hydrogen" in lower_prompt and "oxygen" in lower_prompt and "reaction" in lower_prompt):
-            return LLMStructuredOutput(
-                request_type="reaction",
-                name="Water Formation",
-                reaction_type="WaterFormation",
-                reactants=[
-                    ReactantOrProduct(name="hydrogen", smiles="[H][H]"),
-                    ReactantOrProduct(name="oxygen", smiles="O=O")
-                ],
-                products=[
-                    ReactantOrProduct(name="water", smiles="O")
-                ],
-                conditions=ReactionConditions(),
-                confidence=0.95
-            )
+        reaction_keywords = [
+            "reaction", "sn2", "neutralization", "combustion", "addition", "elimination",
+            "oxidation", "esterification", "synthesis", "substitution", "decomposition",
+            "hydration", "halogenation", "hydrochlorination", "hydrogenation", "chlorination",
+            "finkelstein", "williamson", "saponification", "haber"
+        ]
 
-        if "acid base" in lower_prompt or "neutralization" in lower_prompt:
-            return LLMStructuredOutput(
-                request_type="reaction",
-                name="Acid-Base Neutralization",
-                reaction_type="AcidBase",
-                reactants=[
-                    ReactantOrProduct(name="hydrochloric acid", smiles="Cl"),
-                    ReactantOrProduct(name="sodium hydroxide", smiles="[Na+].[OH-]")
-                ],
-                products=[
-                    ReactantOrProduct(name="sodium chloride", smiles="[Na+].[Cl-]"),
-                    ReactantOrProduct(name="water", smiles="O")
-                ],
-                conditions=ReactionConditions(),
-                confidence=0.95
-            )
+        is_reaction_prompt = any(k in lower_prompt for k in reaction_keywords)
 
-        # Check molecule names in dictionary
+        if is_reaction_prompt or (rxn_match and rxn_match.get("score", 100) >= 60):
+            if rxn_match:
+                return LLMStructuredOutput(
+                    request_type="reaction",
+                    name=rxn_match["name"],
+                    reaction_type=rxn_match["reaction_type"],
+                    reactants=[ReactantOrProduct(**r) for r in rxn_match.get("reactants", [])],
+                    products=[ReactantOrProduct(**p) for p in rxn_match.get("products", [])],
+                    conditions=ReactionConditions(),
+                    confidence=0.96
+                )
+
+        # Check single molecule names in dictionary
         for name, smiles in KNOWN_MOLECULES.items():
-            if name in lower_prompt:
+            if name in lower_prompt and not is_reaction_prompt:
                 return LLMStructuredOutput(
                     request_type="molecule",
                     name=name.capitalize(),
                     smiles=smiles,
                     confidence=0.98
                 )
+
+        if rxn_match:
+            return LLMStructuredOutput(
+                request_type="reaction",
+                name=rxn_match["name"],
+                reaction_type=rxn_match["reaction_type"],
+                reactants=[ReactantOrProduct(**r) for r in rxn_match.get("reactants", [])],
+                products=[ReactantOrProduct(**p) for p in rxn_match.get("products", [])],
+                conditions=ReactionConditions(),
+                confidence=0.96
+            )
 
         # Check if the prompt itself is a raw SMILES string (e.g. CCO, c1ccccc1, C=C)
         clean_smiles = prompt.strip()

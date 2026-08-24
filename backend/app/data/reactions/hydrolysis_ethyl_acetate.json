@@ -1,0 +1,32 @@
+{
+  "reaction_id": "hydrolysis_ethyl_acetate",
+  "name": "Base-Catalyzed Saponification of Ethyl Acetate",
+  "reaction_type": "Substitution",
+  "description": "Hydrolysis of ethyl acetate with hydroxide yielding sodium acetate and ethanol.",
+  "balanced_equation": "CH3COOC2H5 + OH- -> CH3COO- + C2H5OH",
+  "reactants": [
+    {
+      "name": "Ethyl Acetate",
+      "smiles": "CC(=O)OCC"
+    },
+    {
+      "name": "Hydroxide",
+      "smiles": "[OH-]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Acetate Ion",
+      "smiles": "CC(=O)[O-]"
+    },
+    {
+      "name": "Ethanol",
+      "smiles": "CCO"
+    }
+  ],
+  "stages": [
+    "Hydroxide Addition to Carbonyl",
+    "Tetrahedral Intermediate",
+    "Alkoxide Elimination"
+  ]
+}

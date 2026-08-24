@@ -1,0 +1,32 @@
+{
+  "reaction_id": "oxidation_methanol",
+  "name": "Catalytic Oxidation of Methanol to Formaldehyde",
+  "reaction_type": "Oxidation",
+  "description": "Controlled oxidation of methanol over silver or iron-molybdenum catalyst to produce formaldehyde.",
+  "balanced_equation": "2 CH3OH + O2 -> 2 CH2O + 2 H2O",
+  "reactants": [
+    {
+      "name": "Methanol",
+      "smiles": "CO"
+    },
+    {
+      "name": "Oxygen Gas",
+      "smiles": "O=O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Formaldehyde",
+      "smiles": "C=O"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "Methanol Dehydrogenation",
+    "C=O Double Bond Formation",
+    "Water Byproduct Elimination"
+  ]
+}

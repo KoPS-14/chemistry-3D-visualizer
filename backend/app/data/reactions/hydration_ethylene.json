@@ -1,0 +1,28 @@
+{
+  "reaction_id": "hydration_ethylene",
+  "name": "Acid-Catalyzed Hydration of Ethylene",
+  "reaction_type": "Addition",
+  "description": "Electrophilic addition of water across ethylene double bond producing ethanol.",
+  "balanced_equation": "C2H4 + H2O -> C2H5OH",
+  "reactants": [
+    {
+      "name": "Ethylene",
+      "smiles": "C=C"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Ethanol",
+      "smiles": "CCO"
+    }
+  ],
+  "stages": [
+    "Protonation to Carbocation",
+    "Water Nucleophilic Addition",
+    "Deprotonation to Ethanol"
+  ]
+}

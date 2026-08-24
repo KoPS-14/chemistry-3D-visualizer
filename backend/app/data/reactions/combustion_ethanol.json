@@ -1,0 +1,32 @@
+{
+  "reaction_id": "combustion_ethanol",
+  "name": "Ethanol Complete Combustion",
+  "reaction_type": "Combustion",
+  "description": "Exothermic combustion of ethanol in oxygen gas yielding carbon dioxide and water.",
+  "balanced_equation": "C2H5OH + 3 O2 -> 2 CO2 + 3 H2O",
+  "reactants": [
+    {
+      "name": "Ethanol",
+      "smiles": "CCO"
+    },
+    {
+      "name": "Oxygen Gas",
+      "smiles": "O=O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Carbon Dioxide",
+      "smiles": "O=C=O"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "Thermal Activation",
+    "Molecular Fragmentation",
+    "Exothermic Oxide Formation"
+  ]
+}
