@@ -92,7 +92,7 @@ export const lerpVector3 = (
 
 /**
  * Calculates current keyframe interpolation parameters based on timeline progress (0.0 to 1.0)
- * Layouts reactants and products in clean textbook equation order (R1 + R2 -> P1 + P2).
+ * Enforces strict phase separation: Reactants -> Collision -> Pure Transition State -> Products.
  */
 export const calculateAnimationFrameState = (
   reaction: ReactionData,
@@ -100,41 +100,46 @@ export const calculateAnimationFrameState = (
 ): AnimationFrameState => {
   const clampedProgress = Math.max(0, Math.min(1, progress));
 
-  // 4 Clear Stages with Prolonged Transition State (Stage 3)
+  // 4 Strict Stages with Prolonged Transition State (Stage 3)
   const stages = reaction.stages || reaction.animation_template?.stages || [
     '1. Initial Reactant Alignment',
     '2. Reactant Approach & Collision',
-    '3. Prolonged Activated Transition State',
+    '3. Pure Activated Transition State',
     '4. Product Formation & Separation',
   ];
 
   let currentStageIndex = 0;
   if (clampedProgress > 0.20) currentStageIndex = 1;
-  if (clampedProgress > 0.38) currentStageIndex = 2; // Transition phase holds from 0.38 to 0.78!
-  if (clampedProgress > 0.78) currentStageIndex = 3;
+  if (clampedProgress > 0.40) currentStageIndex = 2; // Pure Transition phase holds from 0.40 to 0.75!
+  if (clampedProgress > 0.75) currentStageIndex = 3; // Products only appear AFTER 0.75!
   if (currentStageIndex >= stages.length) currentStageIndex = stages.length - 1;
 
   // Prolonged Transition State Window
-  const isTransitionStateActive = clampedProgress >= 0.35 && clampedProgress <= 0.78;
+  const isTransitionStateActive = clampedProgress >= 0.38 && clampedProgress <= 0.75;
   const isSN2 = reaction.reaction_type.toUpperCase().includes('SN2');
-  const waldenFlipAngle = isSN2 ? (clampedProgress - 0.5) * Math.PI * 0.8 : 0.0;
+  const waldenFlipAngle = isSN2 ? (clampedProgress - 0.4) * Math.PI * 0.9 : 0.0;
 
-  // Reactant & Product Opacities across reaction progress
-  const reactantOpacity = clampedProgress < 0.78 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.78) * 4.5);
-  const productOpacity = clampedProgress > 0.38 ? Math.min(1.0, (clampedProgress - 0.38) * 3.0) : 0.0;
+  // Strict Phase Opacities:
+  // Reactants stay 100% visible throughout Stages 1, 2, and 3 (0.0 to 0.75).
+  const reactantOpacity = clampedProgress <= 0.75 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.75) * 4.0);
+
+  // Products are STRICTLY 0.0 (0% opacity) during Stages 1, 2, and 3 (0.0 to 0.75)!
+  // Products ONLY appear AFTER Transition State completes (clampedProgress > 0.75)!
+  const productOpacity = clampedProgress > 0.75 ? Math.min(1.0, (clampedProgress - 0.75) * 4.0) : 0.0;
 
   // Plus and Arrow Equation Symbols Opacity (Fades out smoothly when reaction starts!)
   const symbolOpacity = clampedProgress < 0.18 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.18) * 5.0);
-  const productPlusOpacity = clampedProgress > 0.78 ? Math.min(1.0, (clampedProgress - 0.78) * 4.0) : 0.0;
+  const productPlusOpacity = clampedProgress > 0.75 ? Math.min(1.0, (clampedProgress - 0.75) * 4.0) : 0.0;
 
-  // Wide Horizontal Offsets for Clean Molecule Separation
+  // Spatial Offsets:
   // Reactant 1: -7.5 -> -1.0; Reactant 2: -1.2 -> +0.8
   const r1OffsetX = -7.5 + clampedProgress * 6.5;
   const r2OffsetX = reaction.reactants.length > 1 ? -1.2 + clampedProgress * 2.0 : 0;
 
-  // Product 1: +0.5 -> +5.5; Product 2: +0.5 -> +12.0
-  const p1OffsetX = 1.0 + (clampedProgress - 0.38) * 4.5;
-  const p2OffsetX = reaction.products.length > 1 ? 2.5 + (clampedProgress - 0.38) * 9.5 : 5.5;
+  // Product 1: +1.0 -> +5.5; Product 2: +2.5 -> +12.0 (Only moves when products appear after 0.75!)
+  const pProg = Math.max(0, clampedProgress - 0.75) * 4.0;
+  const p1OffsetX = 1.0 + pProg * 4.5;
+  const p2OffsetX = reaction.products.length > 1 ? 2.5 + pProg * 9.5 : 5.5;
 
   const bondStretchFactor = isTransitionStateActive ? 1.45 : 1.0;
 
@@ -250,7 +255,7 @@ export const calculateAnimationFrameState = (
     opacity: symbolOpacity,
   });
 
-  // 2. Process Product Molecules & Atoms
+  // 2. Process Product Molecules & Atoms (STRICTLY AFTER TRANSITION STATE)
   reaction.products.forEach((pComp, pIdx) => {
     const baseOffsetX = pIdx === 0 ? p1OffsetX : p2OffsetX;
 
@@ -312,7 +317,7 @@ export const calculateAnimationFrameState = (
         });
       }
 
-      // Molecule Formula & Name Label
+      // Molecule Formula & Name Label (Product labels appear AFTER 0.75!)
       moleculeLabels.push({
         id: `p-label-${pIdx}`,
         name: pComp.name,
@@ -338,8 +343,8 @@ export const calculateAnimationFrameState = (
 
   // 3. Calculate Electron Flow Curved Arc Mechanism
   let electronArc: ElectronFlowArcState | null = null;
-  if (clampedProgress >= 0.20 && clampedProgress <= 0.75) {
-    const arcProgress = (clampedProgress - 0.20) / 0.55;
+  if (clampedProgress >= 0.20 && clampedProgress <= 0.72) {
+    const arcProgress = (clampedProgress - 0.20) / 0.52;
     const startPos: [number, number, number] = [r2OffsetX, 0.8, 0];
     const controlPos: [number, number, number] = [(r1OffsetX + r2OffsetX) / 2, 2.2, 0];
     const endPos: [number, number, number] = [r1OffsetX, 0.2, 0];
@@ -363,19 +368,19 @@ export const calculateAnimationFrameState = (
     const r2Name = reaction.reactants[1]?.name || 'Attacking Species';
 
     transitionAnnotation = {
-      title: `⚡ Activated Transition State (${reaction.reaction_type})`,
+      title: `⚡ Pure Activated Transition State (${reaction.reaction_type})`,
       subtitle: `${r2Name} attacks ${r1Name} at central Carbon atom`,
       breakingBondText: '🟠 C⋯Leaving Group Bond Stretching & Cleavage',
       formingBondText: '🔵 Nucleophile⋯C Bond Formation (e⁻ pair attack)',
-      opacity: Math.sin(((clampedProgress - 0.35) / 0.43) * Math.PI),
+      opacity: Math.sin(((clampedProgress - 0.38) / 0.37) * Math.PI),
     };
   }
 
   const stageDescriptions = [
     'Initial textbook layout showing reactants, reaction arrow, and products',
     'Reactant molecules collide with curved electron pair attack flow',
-    'Prolonged activated transition state showing exact mixing elements & bond changes',
-    'Product molecules form stable covalent bonds and separate cleanly',
+    'Pure activated transition state: Products strictly hidden until mechanism completes',
+    'Transition state completes: Product molecules form and separate into final positions',
   ];
 
   return {
