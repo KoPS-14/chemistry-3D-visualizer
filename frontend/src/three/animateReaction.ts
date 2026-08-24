@@ -72,7 +72,7 @@ export const lerpVector3 = (
 
 /**
  * Calculates current keyframe interpolation parameters based on timeline progress (0.0 to 1.0)
- * Layouts reactants and products in textbook equation order (R1 + R2 -> P1 + P2).
+ * Layouts reactants and products in clean textbook equation order (R1 + R2 -> P1 + P2).
  */
 export const calculateAnimationFrameState = (
   reaction: ReactionData,
@@ -89,8 +89,8 @@ export const calculateAnimationFrameState = (
   ];
 
   let currentStageIndex = 0;
-  if (clampedProgress > 0.25) currentStageIndex = 1;
-  if (clampedProgress > 0.50) currentStageIndex = 2;
+  if (clampedProgress > 0.22) currentStageIndex = 1;
+  if (clampedProgress > 0.48) currentStageIndex = 2;
   if (clampedProgress > 0.75) currentStageIndex = 3;
   if (currentStageIndex >= stages.length) currentStageIndex = stages.length - 1;
 
@@ -102,14 +102,19 @@ export const calculateAnimationFrameState = (
   const reactantOpacity = clampedProgress < 0.75 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.75) * 4.0);
   const productOpacity = clampedProgress > 0.35 ? Math.min(1.0, (clampedProgress - 0.35) * 3.5) : 0.0;
 
-  // Calculate Base Spatial Offsets for Textbook Layout
-  // Reactant 1: -6.5 -> -1.0; Reactant 2: -2.0 -> +0.8
-  const r1OffsetX = -6.5 + clampedProgress * 5.5;
-  const r2OffsetX = reaction.reactants.length > 1 ? -2.0 + clampedProgress * 2.8 : 0;
+  // Plus and Arrow Equation Symbols Opacity (Fade out when reaction starts!)
+  // Visible during textbook equation layout (0.0 to 0.20), smoothly fades out during collision & transition!
+  const symbolOpacity = clampedProgress < 0.20 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.20) * 5.0);
+  const productPlusOpacity = clampedProgress > 0.75 ? Math.min(1.0, (clampedProgress - 0.75) * 4.0) : 0.0;
 
-  // Product 1: +0.5 -> +5.5; Product 2: +0.5 -> +9.5
+  // Wide Horizontal Offsets for Clean Molecule Separation
+  // Reactant 1: -7.5 -> -1.0; Reactant 2: -1.2 -> +0.8
+  const r1OffsetX = -7.5 + clampedProgress * 6.5;
+  const r2OffsetX = reaction.reactants.length > 1 ? -1.2 + clampedProgress * 2.0 : 0;
+
+  // Product 1: +0.5 -> +5.5; Product 2: +0.5 -> +12.0
   const p1OffsetX = 1.0 + (clampedProgress - 0.35) * 4.5;
-  const p2OffsetX = reaction.products.length > 1 ? 2.5 + (clampedProgress - 0.35) * 7.0 : 5.5;
+  const p2OffsetX = reaction.products.length > 1 ? 2.5 + (clampedProgress - 0.35) * 9.5 : 5.5;
 
   const bondStretchFactor = isTransitionStateActive ? 1.4 : 1.0;
 
@@ -191,38 +196,38 @@ export const calculateAnimationFrameState = (
         });
       }
 
-      // Molecule Formula & Name Label
+      // Molecule Formula & Name Label (positioned cleanly below at y = -3.2)
       moleculeLabels.push({
         id: `r-label-${rIdx}`,
         name: rComp.name,
         smiles: rComp.smiles,
         formula: rComp.molecule_data.formula || rComp.smiles,
-        position: [baseOffsetX, -2.4, 0],
+        position: [baseOffsetX, -3.2, 0],
         opacity: reactantOpacity,
         role: 'reactant',
       });
     }
   });
 
-  // Plus symbol between Reactant 1 and Reactant 2
+  // Plus symbol in wide open gap between Reactant 1 and Reactant 2
   if (reaction.reactants.length > 1) {
-    const midPlusX = (r1OffsetX + r2OffsetX) / 2;
+    const midPlusX = -4.3;
     reactionSymbols.push({
       id: 'r-plus',
       type: 'plus',
       position: [midPlusX, 0, 0],
-      opacity: reactantOpacity,
+      opacity: symbolOpacity,
     });
   }
 
-  // Reaction Arrow symbol between Reactants and Products
-  const arrowX = (r2OffsetX + p1OffsetX) / 2 + 0.5;
+  // Reaction Arrow symbol in wide open gap between Reactants and Products
+  const arrowX = 2.2;
   reactionSymbols.push({
     id: 'rxn-arrow',
     type: 'arrow',
     label: reaction.conditions?.catalyst || reaction.reaction_type,
     position: [arrowX, 0, 0],
-    opacity: 1.0,
+    opacity: symbolOpacity,
   });
 
   // 2. Process Product Molecules & Atoms
@@ -293,7 +298,7 @@ export const calculateAnimationFrameState = (
         name: pComp.name,
         smiles: pComp.smiles,
         formula: pComp.molecule_data.formula || pComp.smiles,
-        position: [baseOffsetX, -2.4, 0],
+        position: [baseOffsetX, -3.2, 0],
         opacity: productOpacity,
         role: 'product',
       });
@@ -302,16 +307,15 @@ export const calculateAnimationFrameState = (
 
   // Plus symbol between Product 1 and Product 2
   if (reaction.products.length > 1) {
-    const midPlusX = (p1OffsetX + p2OffsetX) / 2;
+    const midPlusX = 8.8;
     reactionSymbols.push({
       id: 'p-plus',
       type: 'plus',
       position: [midPlusX, 0, 0],
-      opacity: productOpacity,
+      opacity: productPlusOpacity,
     });
   }
 
-  // Keyframe Stage Descriptions
   const stageDescriptions = [
     'Initial textbook layout showing reactants, reaction arrow, and products',
     'Reactant molecules collide and align in optimal orbital orientation',

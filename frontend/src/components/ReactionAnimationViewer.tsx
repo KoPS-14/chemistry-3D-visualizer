@@ -21,18 +21,18 @@ const AnimatedReactionScene: React.FC<{
 }> = ({ reaction, progress, wireframe = false, controlsRef }) => {
   const animState = useMemo(() => calculateAnimationFrameState(reaction, progress), [reaction, progress]);
 
-  // Adjust camera view to capture full horizontal textbook reaction layout
+  // Camera setup: Centered to view full horizontal textbook reaction equation
   useEffect(() => {
     if (controlsRef.current) {
       controlsRef.current.target.set(0, 0, 0);
-      controlsRef.current.object.position.set(0, 1, 14);
+      controlsRef.current.object.position.set(0, 0, 16);
       controlsRef.current.update();
     }
   }, [reaction, controlsRef]);
 
   return (
     <>
-      <ambientLight intensity={0.8} />
+      <ambientLight intensity={0.85} />
       <directionalLight position={[10, 15, 10]} intensity={1.5} />
       <directionalLight position={[-10, -10, -10]} intensity={0.5} />
       <pointLight position={[0, 0, 0]} intensity={0.8} color="#38bdf8" />
@@ -44,23 +44,23 @@ const AnimatedReactionScene: React.FC<{
             <ringGeometry args={[2.2, 2.4, 32]} />
             <meshBasicMaterial color="#f59e0b" opacity={0.7} transparent side={THREE.DoubleSide} />
           </mesh>
-          <Html position={[0, 2.5, 0]} center distanceFactor={12}>
-            <div className="bg-amber-950/90 text-amber-300 font-mono text-xs px-3 py-1 rounded-md border border-amber-500/60 shadow-xl pointer-events-none whitespace-nowrap animate-bounce">
+          <Html position={[0, 2.6, 0]} center distanceFactor={14}>
+            <div className="bg-amber-950/90 text-amber-300 font-mono text-xs px-3.5 py-1 rounded-md border border-amber-500/60 shadow-xl pointer-events-none whitespace-nowrap animate-bounce">
               ⚡ Activated Transition State (Pentacoordinate Complex)
             </div>
           </Html>
         </group>
       )}
 
-      {/* Render Reaction Symbols (+ and -> Arrow) */}
+      {/* Render Equation Symbols (+ and -> Arrow) - Fades out smoothly when reaction starts! */}
       {animState.reactionSymbols.map((sym) => {
-        if (sym.opacity < 0.1) return null;
+        if (sym.opacity < 0.05) return null;
 
         if (sym.type === 'plus') {
           return (
-            <Html key={sym.id} position={sym.position} center distanceFactor={12}>
+            <Html key={sym.id} position={sym.position} center distanceFactor={14}>
               <div
-                className="text-2xl font-bold font-mono text-slate-300 pointer-events-none select-none drop-shadow-md"
+                className="text-3xl font-bold font-mono text-slate-200 pointer-events-none select-none drop-shadow-lg transition-opacity duration-200"
                 style={{ opacity: sym.opacity }}
               >
                 +
@@ -71,14 +71,17 @@ const AnimatedReactionScene: React.FC<{
 
         if (sym.type === 'arrow') {
           return (
-            <Html key={sym.id} position={sym.position} center distanceFactor={12}>
-              <div className="flex flex-col items-center pointer-events-none select-none">
+            <Html key={sym.id} position={sym.position} center distanceFactor={14}>
+              <div
+                className="flex flex-col items-center pointer-events-none select-none transition-opacity duration-200"
+                style={{ opacity: sym.opacity }}
+              >
                 {sym.label && (
-                  <span className="text-[10px] font-mono text-cyan-300 bg-slate-900/90 px-2 py-0.5 rounded border border-cyan-500/40 mb-1 shadow">
+                  <span className="text-[10px] font-mono text-cyan-300 bg-slate-900/90 px-2.5 py-0.5 rounded border border-cyan-500/50 mb-1 shadow-lg">
                     {sym.label}
                   </span>
                 )}
-                <span className="text-3xl font-bold text-cyan-400 font-mono drop-shadow-lg">
+                <span className="text-4xl font-bold text-cyan-400 font-mono drop-shadow-xl">
                   ➔
                 </span>
               </div>
@@ -89,23 +92,23 @@ const AnimatedReactionScene: React.FC<{
         return null;
       })}
 
-      {/* Render Textbook Molecule Labels Below Each Molecule */}
+      {/* Render Clean Textbook Molecule Labels Below Each Molecule */}
       {animState.moleculeLabels.map((lbl) => {
-        if (lbl.opacity < 0.1) return null;
+        if (lbl.opacity < 0.05) return null;
         const isReactant = lbl.role === 'reactant';
 
         return (
-          <Html key={lbl.id} position={lbl.position} center distanceFactor={12}>
+          <Html key={lbl.id} position={lbl.position} center distanceFactor={14}>
             <div
-              className={`flex flex-col items-center p-2 rounded-lg border backdrop-blur-md shadow-xl transition-all pointer-events-none select-none ${
+              className={`flex flex-col items-center px-3 py-1.5 rounded-lg border backdrop-blur-md shadow-2xl transition-all pointer-events-none select-none ${
                 isReactant
-                  ? 'bg-slate-900/95 border-cyan-500/60 text-cyan-300'
-                  : 'bg-slate-900/95 border-emerald-500/60 text-emerald-300'
+                  ? 'bg-slate-900/95 border-cyan-500/70 text-cyan-300'
+                  : 'bg-slate-900/95 border-emerald-500/70 text-emerald-300'
               }`}
               style={{ opacity: lbl.opacity }}
             >
               <span className="text-sm font-bold font-mono tracking-wider">{lbl.formula}</span>
-              <span className="text-[11px] font-medium text-slate-300 truncate max-w-[120px] text-center mt-0.5">
+              <span className="text-[11px] font-semibold text-slate-200 truncate max-w-[130px] text-center mt-0.5">
                 {lbl.name}
               </span>
             </div>
@@ -202,14 +205,14 @@ export const ReactionAnimationViewer: React.FC<ReactionAnimationViewerProps> = (
   const handleResetCamera = () => {
     if (controlsRef.current) {
       controlsRef.current.target.set(0, 0, 0);
-      controlsRef.current.object.position.set(0, 1, 14);
+      controlsRef.current.object.position.set(0, 0, 16);
       controlsRef.current.update();
     }
   };
 
   return (
     <div className="relative w-full h-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
-      <Canvas camera={{ position: [0, 1, 14], fov: 45 }} gl={{ antialias: true }}>
+      <Canvas camera={{ position: [0, 0, 16], fov: 45 }} gl={{ antialias: true }}>
         <AnimatedReactionScene
           reaction={reaction}
           progress={progress}
