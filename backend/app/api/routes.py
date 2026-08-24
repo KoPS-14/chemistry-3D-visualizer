@@ -10,6 +10,8 @@ from app.schemas.models import (
     ReactantOrProduct,
     ReactionConditions,
     ElementData,
+    ChatRequest,
+    ChatResponse,
 )
 from app.ai.llm_service import LLMService
 from app.chemistry.rdkit_service import RDKitService
@@ -52,6 +54,18 @@ def get_element_by_number(atomic_number: int):
             detail=f"Element with atomic number {atomic_number} not found."
         )
     return element
+
+
+@router.post("/chat", response_model=ChatResponse)
+def ask_chemistry_tutor(payload: ChatRequest):
+    """AI Chemistry Tutor Chat Endpoint for conceptual Q&A"""
+    message = payload.message.strip()
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Message cannot be empty."
+        )
+    return LLMService.ask_chemistry_tutor(message, payload.history)
 
 
 @router.post("/visualize", response_model=VisualizeResponse)

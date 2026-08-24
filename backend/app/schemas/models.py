@@ -105,3 +105,21 @@ class VisualizeResponse(BaseModel):
     data: Optional[Union[MoleculeData, ReactionData, dict]] = None
     explanation: Optional[str] = None
     message: Optional[str] = None
+
+
+class ChatMessage(BaseModel):
+    role: str = Field(..., description="'user' or 'assistant'")
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, description="User question or prompt")
+    history: Optional[List[ChatMessage]] = Field(default_factory=list)
+
+
+class ChatResponse(BaseModel):
+    status: str = Field(..., description="'success' or 'error'")
+    reply: str
+    key_concepts: Optional[List[str]] = Field(default_factory=list)
+    suggested_visualize_prompt: Optional[str] = None
+    suggested_followups: Optional[List[str]] = Field(default_factory=list)
