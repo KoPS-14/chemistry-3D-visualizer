@@ -90,16 +90,31 @@ const AnimatedReactionScene: React.FC<{
       <directionalLight position={[-10, -10, -10]} intensity={0.5} />
       <pointLight position={[0, 0, 0]} intensity={0.8} color="#38bdf8" />
 
-      {/* Transition State Activated Complex Overlay */}
-      {animState.isTransitionStateActive && (
+      {/* Transition State Activated Complex Detailed Annotation Overlay */}
+      {animState.transitionAnnotation && (
         <group position={[0, 0, 0]}>
           <mesh rotation={[Math.PI / 2, 0, 0]}>
             <ringGeometry args={[2.2, 2.4, 32]} />
             <meshBasicMaterial color="#f59e0b" opacity={0.7} transparent side={THREE.DoubleSide} />
           </mesh>
-          <Html position={[0, 2.6, 0]} center distanceFactor={14}>
-            <div className="bg-amber-950/90 text-amber-300 font-mono text-xs px-3.5 py-1 rounded-md border border-amber-500/60 shadow-xl pointer-events-none whitespace-nowrap animate-bounce">
-              ⚡ Activated Transition State (Pentacoordinate Complex)
+          <Html position={[0, 2.8, 0]} center distanceFactor={14}>
+            <div
+              className="bg-slate-900/95 border border-amber-500/70 p-3 rounded-xl shadow-2xl flex flex-col gap-1 text-center pointer-events-none min-w-[260px]"
+              style={{ opacity: animState.transitionAnnotation.opacity }}
+            >
+              <div className="text-xs font-bold text-amber-300 font-mono flex items-center justify-center gap-1.5">
+                <span>⚡</span>
+                <span>{animState.transitionAnnotation.title}</span>
+              </div>
+              <p className="text-[11px] text-slate-200 font-medium">{animState.transitionAnnotation.subtitle}</p>
+              <div className="grid grid-cols-2 gap-1.5 mt-1 pt-1.5 border-t border-slate-800 text-[10px] font-mono">
+                <span className="bg-amber-950/80 text-amber-300 p-1 rounded border border-amber-700/60">
+                  {animState.transitionAnnotation.breakingBondText}
+                </span>
+                <span className="bg-cyan-950/80 text-cyan-300 p-1 rounded border border-cyan-700/60">
+                  {animState.transitionAnnotation.formingBondText}
+                </span>
+              </div>
             </div>
           </Html>
         </group>

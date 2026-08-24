@@ -65,7 +65,7 @@ export const App: React.FC = () => {
       if (lastTimeRef.current !== null) {
         const delta = (time - lastTimeRef.current) / 1000;
         setAnimProgress((prev) => {
-          const next = prev + delta * 0.06 * animSpeed;
+          const next = prev + delta * 0.035 * animSpeed;
           if (next >= 1.0) {
             setIsPlayingAnim(false);
             return 1.0;

@@ -50,6 +50,14 @@ export interface ElectronFlowArcState {
   opacity: number;
 }
 
+export interface TransitionAnnotationState {
+  title: string;
+  subtitle: string;
+  breakingBondText: string;
+  formingBondText: string;
+  opacity: number;
+}
+
 export interface AnimationFrameState {
   progress: number;
   currentStageIndex: number;
@@ -61,6 +69,7 @@ export interface AnimationFrameState {
   moleculeLabels: MoleculeLabelState[];
   reactionSymbols: ReactionSymbolState[];
   electronArc: ElectronFlowArcState | null;
+  transitionAnnotation: TransitionAnnotationState | null;
   bondStretchFactor: number;
   isTransitionStateActive: boolean;
 }
@@ -91,31 +100,32 @@ export const calculateAnimationFrameState = (
 ): AnimationFrameState => {
   const clampedProgress = Math.max(0, Math.min(1, progress));
 
-  // Determine stage names
+  // 4 Clear Stages with Prolonged Transition State (Stage 3)
   const stages = reaction.stages || reaction.animation_template?.stages || [
     '1. Initial Reactant Alignment',
     '2. Reactant Approach & Collision',
-    '3. Activated Transition State',
+    '3. Prolonged Activated Transition State',
     '4. Product Formation & Separation',
   ];
 
   let currentStageIndex = 0;
-  if (clampedProgress > 0.22) currentStageIndex = 1;
-  if (clampedProgress > 0.48) currentStageIndex = 2;
-  if (clampedProgress > 0.75) currentStageIndex = 3;
+  if (clampedProgress > 0.20) currentStageIndex = 1;
+  if (clampedProgress > 0.38) currentStageIndex = 2; // Transition phase holds from 0.38 to 0.78!
+  if (clampedProgress > 0.78) currentStageIndex = 3;
   if (currentStageIndex >= stages.length) currentStageIndex = stages.length - 1;
 
-  const isTransitionStateActive = clampedProgress > 0.42 && clampedProgress < 0.72;
+  // Prolonged Transition State Window
+  const isTransitionStateActive = clampedProgress >= 0.35 && clampedProgress <= 0.78;
   const isSN2 = reaction.reaction_type.toUpperCase().includes('SN2');
   const waldenFlipAngle = isSN2 ? (clampedProgress - 0.5) * Math.PI * 0.8 : 0.0;
 
   // Reactant & Product Opacities across reaction progress
-  const reactantOpacity = clampedProgress < 0.75 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.75) * 4.0);
-  const productOpacity = clampedProgress > 0.35 ? Math.min(1.0, (clampedProgress - 0.35) * 3.5) : 0.0;
+  const reactantOpacity = clampedProgress < 0.78 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.78) * 4.5);
+  const productOpacity = clampedProgress > 0.38 ? Math.min(1.0, (clampedProgress - 0.38) * 3.0) : 0.0;
 
   // Plus and Arrow Equation Symbols Opacity (Fades out smoothly when reaction starts!)
-  const symbolOpacity = clampedProgress < 0.20 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.20) * 5.0);
-  const productPlusOpacity = clampedProgress > 0.75 ? Math.min(1.0, (clampedProgress - 0.75) * 4.0) : 0.0;
+  const symbolOpacity = clampedProgress < 0.18 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.18) * 5.0);
+  const productPlusOpacity = clampedProgress > 0.78 ? Math.min(1.0, (clampedProgress - 0.78) * 4.0) : 0.0;
 
   // Wide Horizontal Offsets for Clean Molecule Separation
   // Reactant 1: -7.5 -> -1.0; Reactant 2: -1.2 -> +0.8
@@ -123,10 +133,10 @@ export const calculateAnimationFrameState = (
   const r2OffsetX = reaction.reactants.length > 1 ? -1.2 + clampedProgress * 2.0 : 0;
 
   // Product 1: +0.5 -> +5.5; Product 2: +0.5 -> +12.0
-  const p1OffsetX = 1.0 + (clampedProgress - 0.35) * 4.5;
-  const p2OffsetX = reaction.products.length > 1 ? 2.5 + (clampedProgress - 0.35) * 9.5 : 5.5;
+  const p1OffsetX = 1.0 + (clampedProgress - 0.38) * 4.5;
+  const p2OffsetX = reaction.products.length > 1 ? 2.5 + (clampedProgress - 0.38) * 9.5 : 5.5;
 
-  const bondStretchFactor = isTransitionStateActive ? 1.4 : 1.0;
+  const bondStretchFactor = isTransitionStateActive ? 1.45 : 1.0;
 
   const reactantAtoms: InterpolatedAtomState[] = [];
   const productAtoms: InterpolatedAtomState[] = [];
@@ -326,10 +336,10 @@ export const calculateAnimationFrameState = (
     });
   }
 
-  // 3. Calculate Electron Flow Curved Arc Mechanism (Active during collision & transition phase: 0.25 to 0.70)
+  // 3. Calculate Electron Flow Curved Arc Mechanism
   let electronArc: ElectronFlowArcState | null = null;
-  if (clampedProgress >= 0.25 && clampedProgress <= 0.72) {
-    const arcProgress = (clampedProgress - 0.25) / 0.47;
+  if (clampedProgress >= 0.20 && clampedProgress <= 0.75) {
+    const arcProgress = (clampedProgress - 0.20) / 0.55;
     const startPos: [number, number, number] = [r2OffsetX, 0.8, 0];
     const controlPos: [number, number, number] = [(r1OffsetX + r2OffsetX) / 2, 2.2, 0];
     const endPos: [number, number, number] = [r1OffsetX, 0.2, 0];
@@ -346,10 +356,25 @@ export const calculateAnimationFrameState = (
     };
   }
 
+  // 4. Transition State Explicit Element Mix Annotations
+  let transitionAnnotation: TransitionAnnotationState | null = null;
+  if (isTransitionStateActive) {
+    const r1Name = reaction.reactants[0]?.name || 'Substrate';
+    const r2Name = reaction.reactants[1]?.name || 'Attacking Species';
+
+    transitionAnnotation = {
+      title: `⚡ Activated Transition State (${reaction.reaction_type})`,
+      subtitle: `${r2Name} attacks ${r1Name} at central Carbon atom`,
+      breakingBondText: '🟠 C⋯Leaving Group Bond Stretching & Cleavage',
+      formingBondText: '🔵 Nucleophile⋯C Bond Formation (e⁻ pair attack)',
+      opacity: Math.sin(((clampedProgress - 0.35) / 0.43) * Math.PI),
+    };
+  }
+
   const stageDescriptions = [
     'Initial textbook layout showing reactants, reaction arrow, and products',
     'Reactant molecules collide with curved electron pair attack flow',
-    'High energy transition state with active bond stretching and breaking',
+    'Prolonged activated transition state showing exact mixing elements & bond changes',
     'Product molecules form stable covalent bonds and separate cleanly',
   ];
 
@@ -364,6 +389,7 @@ export const calculateAnimationFrameState = (
     moleculeLabels,
     reactionSymbols,
     electronArc,
+    transitionAnnotation,
     bondStretchFactor,
     isTransitionStateActive,
   };
