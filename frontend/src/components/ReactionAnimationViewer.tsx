@@ -21,49 +21,97 @@ const AnimatedReactionScene: React.FC<{
 }> = ({ reaction, progress, wireframe = false, controlsRef }) => {
   const animState = useMemo(() => calculateAnimationFrameState(reaction, progress), [reaction, progress]);
 
-  // Adjust camera position on initial load
+  // Adjust camera view to capture full horizontal textbook reaction layout
   useEffect(() => {
     if (controlsRef.current) {
       controlsRef.current.target.set(0, 0, 0);
-      controlsRef.current.object.position.set(0, 3, 11);
+      controlsRef.current.object.position.set(0, 1, 14);
       controlsRef.current.update();
     }
   }, [reaction, controlsRef]);
 
-  const catalystName = reaction.conditions?.catalyst || (reaction.reaction_type.includes('Catalyzed') ? 'Pt / Pd Catalyst' : null);
-
   return (
     <>
-      <ambientLight intensity={0.7} />
+      <ambientLight intensity={0.8} />
       <directionalLight position={[10, 15, 10]} intensity={1.5} />
       <directionalLight position={[-10, -10, -10]} intensity={0.5} />
       <pointLight position={[0, 0, 0]} intensity={0.8} color="#38bdf8" />
 
-      {/* Catalyst Indicator Overlay */}
-      {catalystName && (
-        <group position={[0, 3.2, 0]}>
-          <Html center distanceFactor={10}>
-            <div className="bg-emerald-950/90 text-emerald-300 font-mono text-[11px] px-3 py-1 rounded-md border border-emerald-500/50 shadow-xl pointer-events-none whitespace-nowrap">
-              ⚙️ Catalyst Active: <span className="font-bold text-white">{catalystName}</span>
+      {/* Transition State Activated Complex Overlay */}
+      {animState.isTransitionStateActive && (
+        <group position={[0, 0, 0]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[2.2, 2.4, 32]} />
+            <meshBasicMaterial color="#f59e0b" opacity={0.7} transparent side={THREE.DoubleSide} />
+          </mesh>
+          <Html position={[0, 2.5, 0]} center distanceFactor={12}>
+            <div className="bg-amber-950/90 text-amber-300 font-mono text-xs px-3 py-1 rounded-md border border-amber-500/60 shadow-xl pointer-events-none whitespace-nowrap animate-bounce">
+              ⚡ Activated Transition State (Pentacoordinate Complex)
             </div>
           </Html>
         </group>
       )}
 
-      {/* Transition State Glow & Ring Indicator */}
-      {animState.isTransitionStateActive && (
-        <group position={[0, 0, 0]}>
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[2.0, 2.2, 32]} />
-            <meshBasicMaterial color="#f59e0b" opacity={0.7} transparent side={THREE.DoubleSide} />
-          </mesh>
-          <Html position={[0, 2.3, 0]} center distanceFactor={10}>
-            <div className="bg-amber-950/90 text-amber-300 font-mono text-xs px-3 py-1 rounded-md border border-amber-500/60 shadow-xl pointer-events-none whitespace-nowrap animate-bounce">
-              ⚡ Activated Transition State (Activated Complex)
+      {/* Render Reaction Symbols (+ and -> Arrow) */}
+      {animState.reactionSymbols.map((sym) => {
+        if (sym.opacity < 0.1) return null;
+
+        if (sym.type === 'plus') {
+          return (
+            <Html key={sym.id} position={sym.position} center distanceFactor={12}>
+              <div
+                className="text-2xl font-bold font-mono text-slate-300 pointer-events-none select-none drop-shadow-md"
+                style={{ opacity: sym.opacity }}
+              >
+                +
+              </div>
+            </Html>
+          );
+        }
+
+        if (sym.type === 'arrow') {
+          return (
+            <Html key={sym.id} position={sym.position} center distanceFactor={12}>
+              <div className="flex flex-col items-center pointer-events-none select-none">
+                {sym.label && (
+                  <span className="text-[10px] font-mono text-cyan-300 bg-slate-900/90 px-2 py-0.5 rounded border border-cyan-500/40 mb-1 shadow">
+                    {sym.label}
+                  </span>
+                )}
+                <span className="text-3xl font-bold text-cyan-400 font-mono drop-shadow-lg">
+                  ➔
+                </span>
+              </div>
+            </Html>
+          );
+        }
+
+        return null;
+      })}
+
+      {/* Render Textbook Molecule Labels Below Each Molecule */}
+      {animState.moleculeLabels.map((lbl) => {
+        if (lbl.opacity < 0.1) return null;
+        const isReactant = lbl.role === 'reactant';
+
+        return (
+          <Html key={lbl.id} position={lbl.position} center distanceFactor={12}>
+            <div
+              className={`flex flex-col items-center p-2 rounded-lg border backdrop-blur-md shadow-xl transition-all pointer-events-none select-none ${
+                isReactant
+                  ? 'bg-slate-900/95 border-cyan-500/60 text-cyan-300'
+                  : 'bg-slate-900/95 border-emerald-500/60 text-emerald-300'
+              }`}
+              style={{ opacity: lbl.opacity }}
+            >
+              <span className="text-sm font-bold font-mono tracking-wider">{lbl.formula}</span>
+              <span className="text-[11px] font-medium text-slate-300 truncate max-w-[120px] text-center mt-0.5">
+                {lbl.name}
+              </span>
             </div>
           </Html>
-        </group>
-      )}
+        );
+      })}
 
       {/* Render 3D Chemical Bond Cylinders */}
       {animState.animatedBonds.map((bond) => {
@@ -106,14 +154,6 @@ const AnimatedReactionScene: React.FC<{
               roughness={0.2}
               metalness={0.3}
             />
-            {/* Element Label */}
-            {item.opacity > 0.4 && (
-              <Html distanceFactor={10} position={[0, radius + 0.35, 0]} center>
-                <div className="text-[10px] font-mono font-bold text-slate-200 bg-slate-950/90 px-1.5 py-0.5 rounded border border-slate-700/60 pointer-events-none select-none shadow">
-                  {item.atom.symbol || item.atom.element}
-                </div>
-              </Html>
-            )}
           </mesh>
         );
       })}
@@ -135,14 +175,6 @@ const AnimatedReactionScene: React.FC<{
               roughness={0.2}
               metalness={0.3}
             />
-            {/* Element Label */}
-            {item.opacity > 0.4 && (
-              <Html distanceFactor={10} position={[0, radius + 0.35, 0]} center>
-                <div className="text-[10px] font-mono font-bold text-emerald-300 bg-slate-950/90 px-1.5 py-0.5 rounded border border-emerald-700/60 pointer-events-none select-none shadow">
-                  {item.atom.symbol || item.atom.element}
-                </div>
-              </Html>
-            )}
           </mesh>
         );
       })}
@@ -170,14 +202,14 @@ export const ReactionAnimationViewer: React.FC<ReactionAnimationViewerProps> = (
   const handleResetCamera = () => {
     if (controlsRef.current) {
       controlsRef.current.target.set(0, 0, 0);
-      controlsRef.current.object.position.set(0, 3, 11);
+      controlsRef.current.object.position.set(0, 1, 14);
       controlsRef.current.update();
     }
   };
 
   return (
     <div className="relative w-full h-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
-      <Canvas camera={{ position: [0, 3, 11], fov: 45 }} gl={{ antialias: true }}>
+      <Canvas camera={{ position: [0, 1, 14], fov: 45 }} gl={{ antialias: true }}>
         <AnimatedReactionScene
           reaction={reaction}
           progress={progress}
@@ -186,9 +218,9 @@ export const ReactionAnimationViewer: React.FC<ReactionAnimationViewerProps> = (
         />
       </Canvas>
 
-      {/* Label: 3D Reaction Engine */}
+      {/* Label: 3D Textbook Reaction Equation */}
       <div className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded border border-slate-800 text-[11px] font-mono text-cyan-400">
-        3D Bonded Reaction Engine ({reaction.reaction_type})
+        Textbook Reaction Layout ({reaction.balanced_equation || reaction.reaction_type})
       </div>
 
       <button

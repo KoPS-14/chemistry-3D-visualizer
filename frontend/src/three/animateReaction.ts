@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { ReactionData, ReactionKeyframe, AtomData } from '../types/reaction';
+import type { ReactionData, AtomData } from '../types/reaction';
 
 export interface InterpolatedAtomState {
   atom: AtomData;
@@ -22,6 +22,24 @@ export interface InterpolatedBondState {
   order: string | number;
 }
 
+export interface MoleculeLabelState {
+  id: string;
+  name: string;
+  smiles: string;
+  formula: string;
+  position: [number, number, number];
+  opacity: number;
+  role: 'reactant' | 'product';
+}
+
+export interface ReactionSymbolState {
+  id: string;
+  type: 'plus' | 'arrow';
+  label?: string;
+  position: [number, number, number];
+  opacity: number;
+}
+
 export interface AnimationFrameState {
   progress: number;
   currentStageIndex: number;
@@ -30,6 +48,8 @@ export interface AnimationFrameState {
   reactantAtoms: InterpolatedAtomState[];
   productAtoms: InterpolatedAtomState[];
   animatedBonds: InterpolatedBondState[];
+  moleculeLabels: MoleculeLabelState[];
+  reactionSymbols: ReactionSymbolState[];
   bondStretchFactor: number;
   isTransitionStateActive: boolean;
 }
@@ -52,117 +72,90 @@ export const lerpVector3 = (
 
 /**
  * Calculates current keyframe interpolation parameters based on timeline progress (0.0 to 1.0)
+ * Layouts reactants and products in textbook equation order (R1 + R2 -> P1 + P2).
  */
 export const calculateAnimationFrameState = (
   reaction: ReactionData,
   progress: number
 ): AnimationFrameState => {
   const clampedProgress = Math.max(0, Math.min(1, progress));
-  const keyframes: ReactionKeyframe[] = reaction.animation_template?.keyframes || [
-    {
-      progress: 0.0,
-      stage_name: 'Reactant Approach',
-      description: 'Reactants approach to collision distance',
-      reactant_offset: [-3, 0, 0],
-      product_offset: [3, 0, 0],
-      bond_stretch: 1.0,
-      transition_state_active: false,
-    },
-    {
-      progress: 0.5,
-      stage_name: 'Transition State',
-      description: 'High energy transition state with activated complex',
-      reactant_offset: [-0.5, 0, 0],
-      product_offset: [0.5, 0, 0],
-      bond_stretch: 1.4,
-      transition_state_active: true,
-    },
-    {
-      progress: 1.0,
-      stage_name: 'Product Formation',
-      description: 'Products separate into stable states',
-      reactant_offset: [0, 0, 0],
-      product_offset: [4, 0, 0],
-      bond_stretch: 1.0,
-      transition_state_active: false,
-    },
+
+  // Determine stage names
+  const stages = reaction.stages || reaction.animation_template?.stages || [
+    '1. Initial Reactant Alignment',
+    '2. Reactant Approach & Collision',
+    '3. Activated Transition State',
+    '4. Product Formation & Separation',
   ];
 
-  // Find bounding keyframes for current progress
-  let kPrev = keyframes[0];
-  let kNext = keyframes[keyframes.length - 1];
-
-  for (let i = 0; i < keyframes.length - 1; i++) {
-    if (clampedProgress >= keyframes[i].progress && clampedProgress <= keyframes[i + 1].progress) {
-      kPrev = keyframes[i];
-      kNext = keyframes[i + 1];
-      break;
-    }
-  }
-
-  const range = kNext.progress - kPrev.progress || 1.0;
-  const localT = (clampedProgress - kPrev.progress) / range;
-
-  // Smooth step easing for fluid animation
-  const easedT = localT * localT * (3 - 2 * localT);
-
-  const reactantOffset = lerpVector3(kPrev.reactant_offset, kNext.reactant_offset, easedT);
-  const productOffset = lerpVector3(kPrev.product_offset, kNext.product_offset, easedT);
-
-  const bondStretchFactor = kPrev.bond_stretch + (kNext.bond_stretch - kPrev.bond_stretch) * easedT;
-  const isTransitionStateActive = clampedProgress > 0.35 && clampedProgress < 0.75;
-
-  // Reactant fade out in phase 2 (0.5 to 1.0), Product fade in (0.0 to 0.5 -> 1.0)
-  const reactantOpacity = clampedProgress < 0.65 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.65) * 2.8);
-  const productOpacity = clampedProgress > 0.35 ? Math.min(1.0, (clampedProgress - 0.35) * 2.8) : 0.0;
-
-  // Calculate stage index and name
-  const stages = reaction.stages || reaction.animation_template?.stages || ['Reactants', 'Transition State', 'Products'];
   let currentStageIndex = 0;
-  if (clampedProgress > 0.33) currentStageIndex = 1;
-  if (clampedProgress > 0.66) currentStageIndex = 2;
+  if (clampedProgress > 0.25) currentStageIndex = 1;
+  if (clampedProgress > 0.50) currentStageIndex = 2;
+  if (clampedProgress > 0.75) currentStageIndex = 3;
   if (currentStageIndex >= stages.length) currentStageIndex = stages.length - 1;
 
-  // Walden inversion umbrella flip angle calculation for SN2 reactions
+  const isTransitionStateActive = clampedProgress > 0.42 && clampedProgress < 0.72;
   const isSN2 = reaction.reaction_type.toUpperCase().includes('SN2');
   const waldenFlipAngle = isSN2 ? (clampedProgress - 0.5) * Math.PI * 0.8 : 0.0;
 
-  // Interpolate Reactant Atoms & Map 3D positions by atom index
-  const reactantAtoms: InterpolatedAtomState[] = [];
-  const animatedBonds: InterpolatedBondState[] = [];
+  // Reactant & Product Opacities across reaction progress
+  const reactantOpacity = clampedProgress < 0.75 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.75) * 4.0);
+  const productOpacity = clampedProgress > 0.35 ? Math.min(1.0, (clampedProgress - 0.35) * 3.5) : 0.0;
 
-  reaction.reactants.forEach((rComp, compIdx) => {
-    if (rComp.molecule_data?.atoms) {
+  // Calculate Base Spatial Offsets for Textbook Layout
+  // Reactant 1: -6.5 -> -1.0; Reactant 2: -2.0 -> +0.8
+  const r1OffsetX = -6.5 + clampedProgress * 5.5;
+  const r2OffsetX = reaction.reactants.length > 1 ? -2.0 + clampedProgress * 2.8 : 0;
+
+  // Product 1: +0.5 -> +5.5; Product 2: +0.5 -> +9.5
+  const p1OffsetX = 1.0 + (clampedProgress - 0.35) * 4.5;
+  const p2OffsetX = reaction.products.length > 1 ? 2.5 + (clampedProgress - 0.35) * 7.0 : 5.5;
+
+  const bondStretchFactor = isTransitionStateActive ? 1.4 : 1.0;
+
+  const reactantAtoms: InterpolatedAtomState[] = [];
+  const productAtoms: InterpolatedAtomState[] = [];
+  const animatedBonds: InterpolatedBondState[] = [];
+  const moleculeLabels: MoleculeLabelState[] = [];
+  const reactionSymbols: ReactionSymbolState[] = [];
+
+  // 1. Process Reactant Molecules & Atoms
+  reaction.reactants.forEach((rComp, rIdx) => {
+    const baseOffsetX = rIdx === 0 ? r1OffsetX : r2OffsetX;
+
+    if (rComp.molecule_data) {
       const atomPosMap = new Map<number, [number, number, number]>();
 
-      rComp.molecule_data.atoms.forEach((atom) => {
-        let posX = atom.x * bondStretchFactor + reactantOffset[0];
-        let posY = atom.y + reactantOffset[1];
-        let posZ = atom.z + reactantOffset[2];
+      // Atoms
+      if (rComp.molecule_data.atoms) {
+        rComp.molecule_data.atoms.forEach((atom) => {
+          let posX = atom.x * (isTransitionStateActive ? bondStretchFactor : 1.0) + baseOffsetX;
+          let posY = atom.y;
+          let posZ = atom.z;
 
-        // Apply Walden inversion flip on non-carbon hydrogens during transition
-        if (isSN2 && atom.element !== 'C' && atom.element !== 'Br' && atom.element !== 'Cl' && atom.element !== 'I') {
-          const vec = new THREE.Vector3(atom.x, atom.y, atom.z);
-          vec.applyAxisAngle(new THREE.Vector3(0, 1, 0), waldenFlipAngle);
-          posX = vec.x * bondStretchFactor + reactantOffset[0];
-          posY = vec.y + reactantOffset[1];
-          posZ = vec.z + reactantOffset[2];
-        }
+          if (isSN2 && atom.element !== 'C' && atom.element !== 'Br' && atom.element !== 'Cl' && atom.element !== 'I') {
+            const vec = new THREE.Vector3(atom.x, atom.y, atom.z);
+            vec.applyAxisAngle(new THREE.Vector3(0, 1, 0), waldenFlipAngle);
+            posX = vec.x * bondStretchFactor + baseOffsetX;
+            posY = vec.y;
+            posZ = vec.z;
+          }
 
-        const pos: [number, number, number] = [posX, posY, posZ];
-        atomPosMap.set(atom.index, pos);
+          const pos: [number, number, number] = [posX, posY, posZ];
+          atomPosMap.set(atom.index, pos);
 
-        reactantAtoms.push({
-          atom,
-          position: pos,
-          opacity: reactantOpacity,
-          scale: isTransitionStateActive && atom.element === 'C' ? 1.15 : 1.0,
-          isTransitionState: isTransitionStateActive,
+          reactantAtoms.push({
+            atom,
+            position: pos,
+            opacity: reactantOpacity,
+            scale: isTransitionStateActive && atom.element === 'C' ? 1.15 : 1.0,
+            isTransitionState: isTransitionStateActive,
+          });
         });
-      });
+      }
 
-      // Calculate 3D Bonds for Reactant Molecule
-      if (rComp.molecule_data?.bonds) {
+      // Bonds
+      if (rComp.molecule_data.bonds) {
         rComp.molecule_data.bonds.forEach((bond, bIdx) => {
           const uStart = bond.start_index ?? bond.from;
           const uEnd = bond.end_index ?? bond.to;
@@ -178,12 +171,11 @@ export const calculateAnimationFrameState = (
               const len = dir.length();
               const mid = new THREE.Vector3().addVectors(vecA, vecB).multiplyScalar(0.5);
 
-              // Quaternion orientation from (0,1,0) to dir
               const up = new THREE.Vector3(0, 1, 0);
               const quat = new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize());
 
               animatedBonds.push({
-                id: `r-bond-${compIdx}-${bIdx}`,
+                id: `r-bond-${rIdx}-${bIdx}`,
                 startPos: posA,
                 endPos: posB,
                 midpoint: [mid.x, mid.y, mid.z],
@@ -198,35 +190,68 @@ export const calculateAnimationFrameState = (
           }
         });
       }
+
+      // Molecule Formula & Name Label
+      moleculeLabels.push({
+        id: `r-label-${rIdx}`,
+        name: rComp.name,
+        smiles: rComp.smiles,
+        formula: rComp.molecule_data.formula || rComp.smiles,
+        position: [baseOffsetX, -2.4, 0],
+        opacity: reactantOpacity,
+        role: 'reactant',
+      });
     }
   });
 
-  // Interpolate Product Atoms & Map 3D positions for Product Bonds
-  const productAtoms: InterpolatedAtomState[] = [];
+  // Plus symbol between Reactant 1 and Reactant 2
+  if (reaction.reactants.length > 1) {
+    const midPlusX = (r1OffsetX + r2OffsetX) / 2;
+    reactionSymbols.push({
+      id: 'r-plus',
+      type: 'plus',
+      position: [midPlusX, 0, 0],
+      opacity: reactantOpacity,
+    });
+  }
 
-  reaction.products.forEach((pComp, compIdx) => {
-    if (pComp.molecule_data?.atoms) {
+  // Reaction Arrow symbol between Reactants and Products
+  const arrowX = (r2OffsetX + p1OffsetX) / 2 + 0.5;
+  reactionSymbols.push({
+    id: 'rxn-arrow',
+    type: 'arrow',
+    label: reaction.conditions?.catalyst || reaction.reaction_type,
+    position: [arrowX, 0, 0],
+    opacity: 1.0,
+  });
+
+  // 2. Process Product Molecules & Atoms
+  reaction.products.forEach((pComp, pIdx) => {
+    const baseOffsetX = pIdx === 0 ? p1OffsetX : p2OffsetX;
+
+    if (pComp.molecule_data) {
       const atomPosMap = new Map<number, [number, number, number]>();
 
-      pComp.molecule_data.atoms.forEach((atom) => {
-        const posX = atom.x + productOffset[0];
-        const posY = atom.y + productOffset[1];
-        const posZ = atom.z + productOffset[2];
-        const pos: [number, number, number] = [posX, posY, posZ];
+      if (pComp.molecule_data.atoms) {
+        pComp.molecule_data.atoms.forEach((atom) => {
+          const posX = atom.x + baseOffsetX;
+          const posY = atom.y;
+          const posZ = atom.z;
+          const pos: [number, number, number] = [posX, posY, posZ];
 
-        atomPosMap.set(atom.index, pos);
+          atomPosMap.set(atom.index, pos);
 
-        productAtoms.push({
-          atom,
-          position: pos,
-          opacity: productOpacity,
-          scale: 1.0,
-          isTransitionState: isTransitionStateActive,
+          productAtoms.push({
+            atom,
+            position: pos,
+            opacity: productOpacity,
+            scale: 1.0,
+            isTransitionState: isTransitionStateActive,
+          });
         });
-      });
+      }
 
-      // Calculate 3D Bonds for Product Molecule
-      if (pComp.molecule_data?.bonds) {
+      if (pComp.molecule_data.bonds) {
         pComp.molecule_data.bonds.forEach((bond, bIdx) => {
           const uStart = bond.start_index ?? bond.from;
           const uEnd = bond.end_index ?? bond.to;
@@ -246,7 +271,7 @@ export const calculateAnimationFrameState = (
               const quat = new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize());
 
               animatedBonds.push({
-                id: `p-bond-${compIdx}-${bIdx}`,
+                id: `p-bond-${pIdx}-${bIdx}`,
                 startPos: posA,
                 endPos: posB,
                 midpoint: [mid.x, mid.y, mid.z],
@@ -261,17 +286,49 @@ export const calculateAnimationFrameState = (
           }
         });
       }
+
+      // Molecule Formula & Name Label
+      moleculeLabels.push({
+        id: `p-label-${pIdx}`,
+        name: pComp.name,
+        smiles: pComp.smiles,
+        formula: pComp.molecule_data.formula || pComp.smiles,
+        position: [baseOffsetX, -2.4, 0],
+        opacity: productOpacity,
+        role: 'product',
+      });
     }
   });
+
+  // Plus symbol between Product 1 and Product 2
+  if (reaction.products.length > 1) {
+    const midPlusX = (p1OffsetX + p2OffsetX) / 2;
+    reactionSymbols.push({
+      id: 'p-plus',
+      type: 'plus',
+      position: [midPlusX, 0, 0],
+      opacity: productOpacity,
+    });
+  }
+
+  // Keyframe Stage Descriptions
+  const stageDescriptions = [
+    'Initial textbook layout showing reactants, reaction arrow, and products',
+    'Reactant molecules collide and align in optimal orbital orientation',
+    'High energy transition state with active bond stretching and breaking',
+    'Product molecules form stable covalent bonds and separate cleanly',
+  ];
 
   return {
     progress: clampedProgress,
     currentStageIndex,
-    currentStageName: stages[currentStageIndex] || kPrev.stage_name,
-    stageDescription: kPrev.description,
+    currentStageName: stages[currentStageIndex] || 'Reaction Stage',
+    stageDescription: stageDescriptions[currentStageIndex] || 'Chemical transformation',
     reactantAtoms,
     productAtoms,
     animatedBonds,
+    moleculeLabels,
+    reactionSymbols,
     bondStretchFactor,
     isTransitionStateActive,
   };
