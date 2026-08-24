@@ -5,13 +5,66 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import type { ReactionData } from '../types/reaction';
 import { getElementConfig } from '../three/scene';
-import { calculateAnimationFrameState } from '../three/animateReaction';
+import { calculateAnimationFrameState, type ElectronFlowArcState } from '../three/animateReaction';
 
 interface ReactionAnimationViewerProps {
   reaction: ReactionData;
   progress: number;
   wireframe?: boolean;
 }
+
+// 3D Curved Arc for Electron Pair Transfer Mechanism (Curved Arrow Flow)
+const ElectronFlowArc: React.FC<{ arc: ElectronFlowArcState }> = ({ arc }) => {
+  const curve = useMemo(() => {
+    return new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(...arc.startPos),
+      new THREE.Vector3(...arc.controlPos),
+      new THREE.Vector3(...arc.endPos)
+    );
+  }, [arc.startPos, arc.controlPos, arc.endPos]);
+
+  const tubeGeometry = useMemo(() => {
+    return new THREE.TubeGeometry(curve, 32, 0.04, 8, false);
+  }, [curve]);
+
+  // Position of traveling electron pair along the curve
+  const ePos = useMemo(() => curve.getPoint(arc.progress), [curve, arc.progress]);
+
+  if (arc.opacity < 0.05) return null;
+
+  return (
+    <group>
+      {/* Glowing Curved Tube for Electron Pair Movement */}
+      <mesh geometry={tubeGeometry}>
+        <meshStandardMaterial
+          color="#38bdf8"
+          emissive="#38bdf8"
+          emissiveIntensity={1.2}
+          transparent
+          opacity={arc.opacity * 0.85}
+        />
+      </mesh>
+
+      {/* Traveling Electron Pair Spheres (e⁻ pair) */}
+      <group position={[ePos.x, ePos.y, ePos.z]}>
+        <mesh position={[-0.08, 0, 0]}>
+          <sphereGeometry args={[0.09, 16, 16]} />
+          <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={1.5} />
+        </mesh>
+        <mesh position={[0.08, 0, 0]}>
+          <sphereGeometry args={[0.09, 16, 16]} />
+          <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={1.5} />
+        </mesh>
+
+        <Html distanceFactor={12} position={[0, 0.4, 0]} center>
+          <div className="bg-cyan-950/90 text-cyan-300 font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-cyan-400/60 shadow-lg pointer-events-none whitespace-nowrap animate-pulse">
+            e⁻ pair transfer
+          </div>
+        </Html>
+      </group>
+    </group>
+  );
+};
 
 const AnimatedReactionScene: React.FC<{
   reaction: ReactionData;
@@ -52,7 +105,10 @@ const AnimatedReactionScene: React.FC<{
         </group>
       )}
 
-      {/* Render Equation Symbols (+ and -> Arrow) - Fades out smoothly when reaction starts! */}
+      {/* Curved Electron Arc Mechanism (Curved Arrow Pair Flow) */}
+      {animState.electronArc && <ElectronFlowArc arc={animState.electronArc} />}
+
+      {/* Render Equation Symbols (+ and -> Arrow) Inline with Bottom Formula Label Row */}
       {animState.reactionSymbols.map((sym) => {
         if (sym.opacity < 0.05) return null;
 
@@ -60,7 +116,7 @@ const AnimatedReactionScene: React.FC<{
           return (
             <Html key={sym.id} position={sym.position} center distanceFactor={14}>
               <div
-                className="text-3xl font-bold font-mono text-slate-200 pointer-events-none select-none drop-shadow-lg transition-opacity duration-200"
+                className="text-2xl font-bold font-mono text-slate-200 pointer-events-none select-none drop-shadow-lg transition-opacity duration-200"
                 style={{ opacity: sym.opacity }}
               >
                 +
@@ -73,17 +129,17 @@ const AnimatedReactionScene: React.FC<{
           return (
             <Html key={sym.id} position={sym.position} center distanceFactor={14}>
               <div
-                className="flex flex-col items-center pointer-events-none select-none transition-opacity duration-200"
+                className="flex items-center gap-1.5 pointer-events-none select-none transition-opacity duration-200"
                 style={{ opacity: sym.opacity }}
               >
-                {sym.label && (
-                  <span className="text-[10px] font-mono text-cyan-300 bg-slate-900/90 px-2.5 py-0.5 rounded border border-cyan-500/50 mb-1 shadow-lg">
-                    {sym.label}
-                  </span>
-                )}
-                <span className="text-4xl font-bold text-cyan-400 font-mono drop-shadow-xl">
+                <span className="text-3xl font-bold text-cyan-400 font-mono drop-shadow-xl">
                   ➔
                 </span>
+                {sym.label && (
+                  <span className="text-[10px] font-mono text-cyan-300 bg-slate-900/90 px-2 py-0.5 rounded border border-cyan-500/50 shadow-lg">
+                    ({sym.label})
+                  </span>
+                )}
               </div>
             </Html>
           );

@@ -40,6 +40,16 @@ export interface ReactionSymbolState {
   opacity: number;
 }
 
+export interface ElectronFlowArcState {
+  active: boolean;
+  startPos: [number, number, number];
+  controlPos: [number, number, number];
+  endPos: [number, number, number];
+  progress: number;
+  label: string;
+  opacity: number;
+}
+
 export interface AnimationFrameState {
   progress: number;
   currentStageIndex: number;
@@ -50,6 +60,7 @@ export interface AnimationFrameState {
   animatedBonds: InterpolatedBondState[];
   moleculeLabels: MoleculeLabelState[];
   reactionSymbols: ReactionSymbolState[];
+  electronArc: ElectronFlowArcState | null;
   bondStretchFactor: number;
   isTransitionStateActive: boolean;
 }
@@ -102,8 +113,7 @@ export const calculateAnimationFrameState = (
   const reactantOpacity = clampedProgress < 0.75 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.75) * 4.0);
   const productOpacity = clampedProgress > 0.35 ? Math.min(1.0, (clampedProgress - 0.35) * 3.5) : 0.0;
 
-  // Plus and Arrow Equation Symbols Opacity (Fade out when reaction starts!)
-  // Visible during textbook equation layout (0.0 to 0.20), smoothly fades out during collision & transition!
+  // Plus and Arrow Equation Symbols Opacity (Fades out smoothly when reaction starts!)
   const symbolOpacity = clampedProgress < 0.20 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.20) * 5.0);
   const productPlusOpacity = clampedProgress > 0.75 ? Math.min(1.0, (clampedProgress - 0.75) * 4.0) : 0.0;
 
@@ -196,7 +206,7 @@ export const calculateAnimationFrameState = (
         });
       }
 
-      // Molecule Formula & Name Label (positioned cleanly below at y = -3.2)
+      // Molecule Formula & Name Label (positioned in bottom label row at y = -3.2)
       moleculeLabels.push({
         id: `r-label-${rIdx}`,
         name: rComp.name,
@@ -209,24 +219,24 @@ export const calculateAnimationFrameState = (
     }
   });
 
-  // Plus symbol in wide open gap between Reactant 1 and Reactant 2
+  // Plus symbol inline with bottom label row between Reactant 1 and Reactant 2
   if (reaction.reactants.length > 1) {
     const midPlusX = -4.3;
     reactionSymbols.push({
       id: 'r-plus',
       type: 'plus',
-      position: [midPlusX, 0, 0],
+      position: [midPlusX, -3.2, 0],
       opacity: symbolOpacity,
     });
   }
 
-  // Reaction Arrow symbol in wide open gap between Reactants and Products
+  // Reaction Arrow symbol inline with bottom label row between Reactants and Products
   const arrowX = 2.2;
   reactionSymbols.push({
     id: 'rxn-arrow',
     type: 'arrow',
     label: reaction.conditions?.catalyst || reaction.reaction_type,
-    position: [arrowX, 0, 0],
+    position: [arrowX, -3.2, 0],
     opacity: symbolOpacity,
   });
 
@@ -311,14 +321,34 @@ export const calculateAnimationFrameState = (
     reactionSymbols.push({
       id: 'p-plus',
       type: 'plus',
-      position: [midPlusX, 0, 0],
+      position: [midPlusX, -3.2, 0],
       opacity: productPlusOpacity,
     });
   }
 
+  // 3. Calculate Electron Flow Curved Arc Mechanism (Active during collision & transition phase: 0.25 to 0.70)
+  let electronArc: ElectronFlowArcState | null = null;
+  if (clampedProgress >= 0.25 && clampedProgress <= 0.72) {
+    const arcProgress = (clampedProgress - 0.25) / 0.47;
+    const startPos: [number, number, number] = [r2OffsetX, 0.8, 0];
+    const controlPos: [number, number, number] = [(r1OffsetX + r2OffsetX) / 2, 2.2, 0];
+    const endPos: [number, number, number] = [r1OffsetX, 0.2, 0];
+    const arcOpacity = Math.sin(arcProgress * Math.PI);
+
+    electronArc = {
+      active: true,
+      startPos,
+      controlPos,
+      endPos,
+      progress: arcProgress,
+      label: 'Nucleophilic Electron Pair Attack (e⁻ pair)',
+      opacity: arcOpacity,
+    };
+  }
+
   const stageDescriptions = [
     'Initial textbook layout showing reactants, reaction arrow, and products',
-    'Reactant molecules collide and align in optimal orbital orientation',
+    'Reactant molecules collide with curved electron pair attack flow',
     'High energy transition state with active bond stretching and breaking',
     'Product molecules form stable covalent bonds and separate cleanly',
   ];
@@ -333,6 +363,7 @@ export const calculateAnimationFrameState = (
     animatedBonds,
     moleculeLabels,
     reactionSymbols,
+    electronArc,
     bondStretchFactor,
     isTransitionStateActive,
   };
