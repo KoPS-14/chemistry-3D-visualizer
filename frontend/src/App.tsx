@@ -144,7 +144,7 @@ export const App: React.FC = () => {
     : null;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-white relative overflow-x-hidden">
       {/* AI Chemistry Tutor Drawer Component */}
       <ChemistryTutorChat
         isOpen={isChatOpen}
@@ -152,30 +152,30 @@ export const App: React.FC = () => {
         onVisualizePrompt={handleTutorVisualize}
       />
 
-      {/* Header Bar */}
-      <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+      {/* Futuristic Header Bar */}
+      <header className="border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-xl px-6 py-4 flex items-center justify-between sticky top-0 z-40 shadow-2xl">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-teal-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/25 ring-1 ring-cyan-400/40">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.6 15.12a2 2 0 00-1.144.174l-.946.542a2 2 0 00-.77 2.65l.77 1.332a2 2 0 002.65.77l.946-.542a2 2 0 011.144-.174l2.387.477a6 6 0 003.86-.517l.318-.158a6 6 0 013.86-.517l2.387.477a2 2 0 001.022-.547l.946-.542a2 2 0 00.77-2.65l-.77-1.332a2 2 0 00-2.65.77l-.946.542z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
+            <h1 className="text-xl font-extrabold bg-gradient-to-r from-white via-cyan-200 to-teal-400 bg-clip-text text-transparent tracking-tight">
               ChemAI 3D
             </h1>
-            <p className="text-xs text-slate-400">3D Periodic Table & Procedural Reaction Visualizer</p>
+            <p className="text-[11px] text-cyan-400 font-mono tracking-wide">3D Periodic Table & Reaction Engine</p>
           </div>
         </div>
 
         {/* Navigation Mode Switcher & AI Tutor Button */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+          <div className="flex items-center gap-1.5 bg-slate-950/90 p-1.5 rounded-xl border border-slate-800/90 shadow-inner">
             <button
               onClick={() => setActiveTab('elements')}
-              className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'elements'
-                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/30'
+                  ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-lg shadow-cyan-600/40 border border-cyan-400/40'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
               }`}
             >
@@ -188,9 +188,9 @@ export const App: React.FC = () => {
                   handlePromptSubmit('Show SN2 reaction of methyl bromide with hydroxide');
                 }
               }}
-              className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'molecules'
-                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/30'
+                  ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-lg shadow-cyan-600/40 border border-cyan-400/40'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
               }`}
             >
@@ -200,18 +200,18 @@ export const App: React.FC = () => {
 
           <button
             onClick={() => setIsChatOpen((prev) => !prev)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-cyan-950/90 text-cyan-300 border border-cyan-600/60 hover:bg-cyan-900 hover:text-white transition cursor-pointer shadow-lg shadow-cyan-950/50"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 text-cyan-300 border border-cyan-500/50 hover:border-cyan-400 hover:text-white transition-all cursor-pointer shadow-xl shadow-cyan-950/60"
           >
-            <span>💬</span>
+            <span className="text-sm">🤖</span>
             <span>AI Tutor</span>
           </button>
         </div>
 
         {/* Backend Connection Status Badge */}
-        <div className="hidden sm:flex items-center gap-2">
-          <span className={`w-2.5 h-2.5 rounded-full ${backendConnected === true ? 'bg-emerald-400 animate-pulse' : backendConnected === false ? 'bg-rose-500' : 'bg-amber-400'}`} />
-          <span className="text-xs font-medium text-slate-400">
-            {backendConnected === true ? 'FastAPI Connected' : backendConnected === false ? 'Backend Offline' : 'Connecting...'}
+        <div className="hidden sm:flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+          <span className={`w-2.5 h-2.5 rounded-full ${backendConnected === true ? 'bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400' : backendConnected === false ? 'bg-rose-500' : 'bg-amber-400'}`} />
+          <span className="text-xs font-mono text-slate-300">
+            {backendConnected === true ? 'FastAPI & Gemini Live' : backendConnected === false ? 'Backend Offline' : 'Connecting...'}
           </span>
         </div>
       </header>
@@ -224,13 +224,13 @@ export const App: React.FC = () => {
         {activeTab === 'elements' && (
           <>
             {/* Top Toolbar: Search Box & Title */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-2xl backdrop-blur-xl">
               <div>
                 <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
                   Interactive 118-Element Periodic Table
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">Click any element below to inspect its 3D educational atomic orbital model.</p>
+                <p className="text-xs text-slate-400 mt-0.5 font-mono">Click any element below to inspect its 3D educational atomic orbital model.</p>
               </div>
 
               <ElementSearch elements={elementsList} onSelectElement={setSelectedElement} />
@@ -269,14 +269,14 @@ export const App: React.FC = () => {
 
             {/* Notifications / Explanations / Error Messages */}
             {explanation && (
-              <div className="bg-cyan-950/40 border border-cyan-800/60 rounded-xl p-4 text-xs text-cyan-200 shadow-md">
-                <span className="font-bold">ℹ️ Chemistry Engine Note:</span> {explanation}
+              <div className="bg-cyan-950/40 border border-cyan-800/70 rounded-2xl p-4 text-xs text-cyan-200 shadow-xl backdrop-blur-md font-mono">
+                <span className="font-bold text-cyan-300">ℹ️ Chemistry Engine Note:</span> {explanation}
               </div>
             )}
 
             {errorMsg && (
-              <div className="bg-rose-950/50 border border-rose-800/80 rounded-xl p-4 text-xs text-rose-200 shadow-md flex items-center gap-2">
-                <span className="text-base">⚠️</span>
+              <div className="bg-rose-950/50 border border-rose-800/80 rounded-2xl p-4 text-xs text-rose-200 shadow-xl backdrop-blur-md flex items-center gap-2.5 font-mono">
+                <span className="text-lg">⚠️</span>
                 <span>{errorMsg}</span>
               </div>
             )}

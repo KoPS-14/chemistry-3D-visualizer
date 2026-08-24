@@ -2,19 +2,25 @@ import os
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "AI-Powered Chemistry Visualization System"
-    VERSION: str = "0.1.0"
+    PROJECT_NAME: str = "ChemAI 3D - AI-Powered Chemistry System"
+    VERSION: str = "1.0.0"
     API_PREFIX: str = "/api"
-    
+
+    GEMINI_API_KEY: str = ""
     LLM_API_KEY: str = ""
-    LLM_PROVIDER: str = "openai"
-    LLM_MODEL: str = "gpt-4o-mini"
-    
+    LLM_PROVIDER: str = "gemini"
+    LLM_MODEL: str = "gemini-1.5-flash"
+
     BASE_DIR: Path = Path(__file__).resolve().parent.parent
     DATA_DIR: Path = Path(__file__).resolve().parent.parent / "data"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def active_api_key(self) -> str:
+        return self.GEMINI_API_KEY.strip() or self.LLM_API_KEY.strip()
 
 
 settings = Settings()

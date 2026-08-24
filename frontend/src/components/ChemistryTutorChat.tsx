@@ -26,8 +26,8 @@ export const ChemistryTutorChat: React.FC<ChemistryTutorChatProps> = ({
       id: 'welcome-msg',
       role: 'assistant',
       content:
-        'Hello! I am your **AI Chemistry Tutor**. Ask me anything about theoretical organic, physical, or general chemistry concepts!',
-      keyConcepts: ['Theoretical Chemistry', 'Mechanism Q&A', '3D Integration'],
+        '### 👋 Hello! I am your AI Chemistry Tutor\n\nAsk me any question about organic mechanisms, physical chemistry, or thermodynamics!',
+      keyConcepts: ['Organic Mechanisms', 'Physical Chemistry', '3D Visual Router'],
       suggestedFollowups: [
         'What is a nucleophile?',
         'Explain SN1 vs SN2 mechanisms',
@@ -97,7 +97,7 @@ export const ChemistryTutorChat: React.FC<ChemistryTutorChatProps> = ({
       const errorMsg: ChatMessageData = {
         id: `err-${Date.now()}`,
         role: 'assistant',
-        content: '⚠️ Unable to connect to AI Tutor API. Please make sure the backend FastAPI service is running.',
+        content: '⚠️ Unable to connect to AI Tutor API. Please ensure FastAPI backend is running.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -109,21 +109,24 @@ export const ChemistryTutorChat: React.FC<ChemistryTutorChatProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-slate-900/95 backdrop-blur-xl border-l border-slate-800 shadow-2xl z-50 flex flex-col transition-all duration-300">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-[440px] bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800/90 shadow-2xl z-50 flex flex-col transition-all duration-300">
       {/* Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-            🧪
+      <div className="p-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/80 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-lg shadow-cyan-500/20">
+            🤖
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white tracking-wide">AI Chemistry Tutor</h3>
-            <p className="text-[11px] text-cyan-400 font-mono">Conceptual Q&A & 3D Router</p>
+            <h3 className="text-sm font-bold text-white tracking-wide flex items-center gap-1.5">
+              AI Chemistry Tutor
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            </h3>
+            <p className="text-[11px] text-cyan-400 font-mono">Gemini & Offline Knowledge Router</p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-slate-400 hover:text-white text-lg p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+          className="text-slate-400 hover:text-white text-base p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
         >
           ✕
         </button>
@@ -139,10 +142,10 @@ export const ChemistryTutorChat: React.FC<ChemistryTutorChatProps> = ({
               className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
             >
               <div
-                className={`max-w-[90%] rounded-2xl p-3.5 shadow-lg border transition-all ${
+                className={`max-w-[92%] rounded-2xl p-4 shadow-xl border transition-all ${
                   isUser
-                    ? 'bg-cyan-600 text-white border-cyan-500 rounded-br-none'
-                    : 'bg-slate-800/90 text-slate-100 border-slate-700/80 rounded-bl-none'
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-cyan-400/40 rounded-br-none'
+                    : 'bg-slate-900/90 text-slate-100 border-slate-800/90 rounded-bl-none backdrop-blur-md'
                 }`}
               >
                 {/* Message Content */}
@@ -152,11 +155,11 @@ export const ChemistryTutorChat: React.FC<ChemistryTutorChatProps> = ({
 
                 {/* Key Concepts Badges */}
                 {msg.keyConcepts && msg.keyConcepts.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2.5 pt-2 border-t border-slate-700/60">
+                  <div className="flex flex-wrap gap-1 mt-3 pt-2.5 border-t border-slate-800/80">
                     {msg.keyConcepts.map((concept, cIdx) => (
                       <span
                         key={cIdx}
-                        className="text-[10px] font-mono bg-cyan-950/80 text-cyan-300 px-2 py-0.5 rounded border border-cyan-700/60"
+                        className="text-[10px] font-mono bg-cyan-950/80 text-cyan-300 px-2.5 py-0.5 rounded-md border border-cyan-800/60 shadow-sm"
                       >
                         🏷️ {concept}
                       </span>
@@ -166,14 +169,14 @@ export const ChemistryTutorChat: React.FC<ChemistryTutorChatProps> = ({
 
                 {/* 3D Visualization Action Button */}
                 {msg.suggestedVisualizePrompt && (
-                  <div className="mt-3 pt-2 border-t border-slate-700/60">
+                  <div className="mt-3 pt-2.5 border-t border-slate-800/80">
                     <button
                       onClick={() => {
                         if (msg.suggestedVisualizePrompt) {
                           onVisualizePrompt(msg.suggestedVisualizePrompt);
                         }
                       }}
-                      className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold text-xs py-1.5 px-3 rounded-lg shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-600 hover:from-cyan-400 hover:to-emerald-500 text-white font-semibold text-xs py-2 px-3 rounded-xl shadow-lg shadow-cyan-950/50 transition flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <span>📷</span>
                       <span>Visualize &quot;{msg.suggestedVisualizePrompt}&quot; in 3D</span>
@@ -189,14 +192,14 @@ export const ChemistryTutorChat: React.FC<ChemistryTutorChatProps> = ({
 
               {/* Suggested Followups */}
               {!isUser && msg.suggestedFollowups && msg.suggestedFollowups.length > 0 && (
-                <div className="mt-2 space-y-1 w-full max-w-[90%]">
+                <div className="mt-2.5 space-y-1.5 w-full max-w-[92%]">
                   <span className="text-[10px] font-mono text-slate-400">Suggested Questions:</span>
                   <div className="flex flex-col gap-1">
                     {msg.suggestedFollowups.map((q, qIdx) => (
                       <button
                         key={qIdx}
                         onClick={() => handleSendMessage(q)}
-                        className="text-left text-[11px] text-cyan-300 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 px-2.5 py-1 rounded-lg transition cursor-pointer"
+                        className="text-left text-[11px] text-cyan-300 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 px-3 py-1.5 rounded-xl transition cursor-pointer font-mono"
                       >
                         💡 {q}
                       </button>
@@ -210,7 +213,7 @@ export const ChemistryTutorChat: React.FC<ChemistryTutorChatProps> = ({
 
         {/* Loading Indicator */}
         {isLoading && (
-          <div className="flex items-center gap-2 text-slate-400 text-xs bg-slate-800/60 p-3 rounded-xl border border-slate-700/60 w-fit animate-pulse">
+          <div className="flex items-center gap-2.5 text-slate-300 text-xs bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 w-fit animate-pulse shadow-lg">
             <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" />
             <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.2s]" />
             <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.4s]" />
@@ -222,7 +225,7 @@ export const ChemistryTutorChat: React.FC<ChemistryTutorChatProps> = ({
       </div>
 
       {/* Input Box */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/80">
+      <div className="p-4 border-t border-slate-800/80 bg-slate-950/90">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -235,12 +238,12 @@ export const ChemistryTutorChat: React.FC<ChemistryTutorChatProps> = ({
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Ask a chemistry question..."
-            className="flex-1 bg-slate-900 text-slate-100 placeholder-slate-500 text-xs px-3.5 py-2.5 rounded-xl border border-slate-700 focus:outline-none focus:border-cyan-500 transition"
+            className="flex-1 bg-slate-900 text-slate-100 placeholder-slate-500 text-xs px-4 py-3 rounded-xl border border-slate-700/80 focus:outline-none focus:border-cyan-500 transition font-mono shadow-inner"
           />
           <button
             type="submit"
             disabled={!inputMessage.trim() || isLoading}
-            className="bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-800 text-white text-xs px-3.5 py-2.5 rounded-xl transition font-semibold flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:from-slate-800 disabled:to-slate-800 text-white text-xs px-4 py-3 rounded-xl transition font-semibold flex items-center justify-center cursor-pointer disabled:cursor-not-allowed shadow-md"
           >
             Send
           </button>
