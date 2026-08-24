@@ -30,6 +30,8 @@ const AnimatedReactionScene: React.FC<{
     }
   }, [reaction, controlsRef]);
 
+  const catalystName = reaction.conditions?.catalyst || (reaction.reaction_type.includes('Catalyzed') ? 'Pt / Pd Catalyst' : null);
+
   return (
     <>
       <ambientLight intensity={0.7} />
@@ -37,23 +39,59 @@ const AnimatedReactionScene: React.FC<{
       <directionalLight position={[-10, -10, -10]} intensity={0.5} />
       <pointLight position={[0, 0, 0]} intensity={0.8} color="#38bdf8" />
 
-      {/* Transition State Glow & Ring Indicator */}
-      {animState.isTransitionStateActive && (
-        <group position={[0, 0, 0]}>
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[1.8, 2.0, 32]} />
-            <meshBasicMaterial color="#f59e0b" opacity={0.6} transparent side={THREE.DoubleSide} />
-          </mesh>
-          <Html position={[0, 2.2, 0]} center distanceFactor={10}>
-            <div className="bg-amber-950/90 text-amber-300 font-mono text-xs px-2.5 py-1 rounded-md border border-amber-500/50 shadow-xl pointer-events-none whitespace-nowrap animate-bounce">
-              ⚡ Transition State (Activated Complex)
+      {/* Catalyst Indicator Overlay */}
+      {catalystName && (
+        <group position={[0, 3.2, 0]}>
+          <Html center distanceFactor={10}>
+            <div className="bg-emerald-950/90 text-emerald-300 font-mono text-[11px] px-3 py-1 rounded-md border border-emerald-500/50 shadow-xl pointer-events-none whitespace-nowrap">
+              ⚙️ Catalyst Active: <span className="font-bold text-white">{catalystName}</span>
             </div>
           </Html>
         </group>
       )}
 
+      {/* Transition State Glow & Ring Indicator */}
+      {animState.isTransitionStateActive && (
+        <group position={[0, 0, 0]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[2.0, 2.2, 32]} />
+            <meshBasicMaterial color="#f59e0b" opacity={0.7} transparent side={THREE.DoubleSide} />
+          </mesh>
+          <Html position={[0, 2.3, 0]} center distanceFactor={10}>
+            <div className="bg-amber-950/90 text-amber-300 font-mono text-xs px-3 py-1 rounded-md border border-amber-500/60 shadow-xl pointer-events-none whitespace-nowrap animate-bounce">
+              ⚡ Activated Transition State (Activated Complex)
+            </div>
+          </Html>
+        </group>
+      )}
+
+      {/* Render 3D Chemical Bond Cylinders */}
+      {animState.animatedBonds.map((bond) => {
+        if (bond.opacity < 0.05) return null;
+        const radius = bond.isTransition ? 0.07 : 0.12;
+
+        return (
+          <mesh
+            key={bond.id}
+            position={bond.midpoint}
+            quaternion={bond.quaternion}
+          >
+            <cylinderGeometry args={[radius, radius, bond.length, 16]} />
+            <meshStandardMaterial
+              color={bond.color}
+              wireframe={wireframe}
+              transparent
+              opacity={bond.opacity * (bond.isTransition ? 0.8 : 0.95)}
+              roughness={0.3}
+              metalness={0.2}
+            />
+          </mesh>
+        );
+      })}
+
       {/* Render Reactant Atoms */}
       {animState.reactantAtoms.map((item, idx) => {
+        if (item.opacity < 0.05) return null;
         const cfg = getElementConfig(item.atom.element, item.atom.cpk_color);
         const radius = cfg.radius * item.scale;
 
@@ -70,8 +108,8 @@ const AnimatedReactionScene: React.FC<{
             />
             {/* Element Label */}
             {item.opacity > 0.4 && (
-              <Html distanceFactor={10} position={[0, radius + 0.3, 0]} center>
-                <div className="text-[10px] font-mono font-bold text-slate-200 bg-slate-950/80 px-1 py-0.5 rounded border border-slate-700/60 pointer-events-none select-none">
+              <Html distanceFactor={10} position={[0, radius + 0.35, 0]} center>
+                <div className="text-[10px] font-mono font-bold text-slate-200 bg-slate-950/90 px-1.5 py-0.5 rounded border border-slate-700/60 pointer-events-none select-none shadow">
                   {item.atom.symbol || item.atom.element}
                 </div>
               </Html>
@@ -82,6 +120,7 @@ const AnimatedReactionScene: React.FC<{
 
       {/* Render Product Atoms */}
       {animState.productAtoms.map((item, idx) => {
+        if (item.opacity < 0.05) return null;
         const cfg = getElementConfig(item.atom.element, item.atom.cpk_color);
         const radius = cfg.radius * item.scale;
 
@@ -98,8 +137,8 @@ const AnimatedReactionScene: React.FC<{
             />
             {/* Element Label */}
             {item.opacity > 0.4 && (
-              <Html distanceFactor={10} position={[0, radius + 0.3, 0]} center>
-                <div className="text-[10px] font-mono font-bold text-emerald-300 bg-slate-950/80 px-1 py-0.5 rounded border border-emerald-700/60 pointer-events-none select-none">
+              <Html distanceFactor={10} position={[0, radius + 0.35, 0]} center>
+                <div className="text-[10px] font-mono font-bold text-emerald-300 bg-slate-950/90 px-1.5 py-0.5 rounded border border-emerald-700/60 pointer-events-none select-none shadow">
                   {item.atom.symbol || item.atom.element}
                 </div>
               </Html>
@@ -149,7 +188,7 @@ export const ReactionAnimationViewer: React.FC<ReactionAnimationViewerProps> = (
 
       {/* Label: 3D Reaction Engine */}
       <div className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded border border-slate-800 text-[11px] font-mono text-cyan-400">
-        3D Procedural Reaction Engine ({reaction.reaction_type})
+        3D Bonded Reaction Engine ({reaction.reaction_type})
       </div>
 
       <button

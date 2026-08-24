@@ -9,6 +9,19 @@ export interface InterpolatedAtomState {
   isTransitionState: boolean;
 }
 
+export interface InterpolatedBondState {
+  id: string;
+  startPos: [number, number, number];
+  endPos: [number, number, number];
+  midpoint: [number, number, number];
+  quaternion: THREE.Quaternion;
+  length: number;
+  opacity: number;
+  color: string;
+  isTransition: boolean;
+  order: string | number;
+}
+
 export interface AnimationFrameState {
   progress: number;
   currentStageIndex: number;
@@ -16,6 +29,7 @@ export interface AnimationFrameState {
   stageDescription: string;
   reactantAtoms: InterpolatedAtomState[];
   productAtoms: InterpolatedAtomState[];
+  animatedBonds: InterpolatedBondState[];
   bondStretchFactor: number;
   isTransitionStateActive: boolean;
 }
@@ -89,7 +103,7 @@ export const calculateAnimationFrameState = (
   const range = kNext.progress - kPrev.progress || 1.0;
   const localT = (clampedProgress - kPrev.progress) / range;
 
-  // Smooth step / cubic easing for fluid molecular animation
+  // Smooth step easing for fluid animation
   const easedT = localT * localT * (3 - 2 * localT);
 
   const reactantOffset = lerpVector3(kPrev.reactant_offset, kNext.reactant_offset, easedT);
@@ -99,8 +113,8 @@ export const calculateAnimationFrameState = (
   const isTransitionStateActive = clampedProgress > 0.35 && clampedProgress < 0.75;
 
   // Reactant fade out in phase 2 (0.5 to 1.0), Product fade in (0.0 to 0.5 -> 1.0)
-  const reactantOpacity = clampedProgress < 0.6 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.6) * 2.2);
-  const productOpacity = clampedProgress > 0.4 ? Math.min(1.0, (clampedProgress - 0.4) * 2.2) : 0.0;
+  const reactantOpacity = clampedProgress < 0.65 ? 1.0 : Math.max(0, 1.0 - (clampedProgress - 0.65) * 2.8);
+  const productOpacity = clampedProgress > 0.35 ? Math.min(1.0, (clampedProgress - 0.35) * 2.8) : 0.0;
 
   // Calculate stage index and name
   const stages = reaction.stages || reaction.animation_template?.stages || ['Reactants', 'Transition State', 'Products'];
@@ -113,10 +127,14 @@ export const calculateAnimationFrameState = (
   const isSN2 = reaction.reaction_type.toUpperCase().includes('SN2');
   const waldenFlipAngle = isSN2 ? (clampedProgress - 0.5) * Math.PI * 0.8 : 0.0;
 
-  // Interpolate Reactant Atoms
+  // Interpolate Reactant Atoms & Map 3D positions by atom index
   const reactantAtoms: InterpolatedAtomState[] = [];
-  reaction.reactants.forEach((rComp) => {
+  const animatedBonds: InterpolatedBondState[] = [];
+
+  reaction.reactants.forEach((rComp, compIdx) => {
     if (rComp.molecule_data?.atoms) {
+      const atomPosMap = new Map<number, [number, number, number]>();
+
       rComp.molecule_data.atoms.forEach((atom) => {
         let posX = atom.x * bondStretchFactor + reactantOffset[0];
         let posY = atom.y + reactantOffset[1];
@@ -131,34 +149,118 @@ export const calculateAnimationFrameState = (
           posZ = vec.z + reactantOffset[2];
         }
 
+        const pos: [number, number, number] = [posX, posY, posZ];
+        atomPosMap.set(atom.index, pos);
+
         reactantAtoms.push({
           atom,
-          position: [posX, posY, posZ],
+          position: pos,
           opacity: reactantOpacity,
           scale: isTransitionStateActive && atom.element === 'C' ? 1.15 : 1.0,
           isTransitionState: isTransitionStateActive,
         });
       });
+
+      // Calculate 3D Bonds for Reactant Molecule
+      if (rComp.molecule_data?.bonds) {
+        rComp.molecule_data.bonds.forEach((bond, bIdx) => {
+          const uStart = bond.start_index ?? bond.from;
+          const uEnd = bond.end_index ?? bond.to;
+
+          if (uStart !== undefined && uEnd !== undefined) {
+            const posA = atomPosMap.get(uStart);
+            const posB = atomPosMap.get(uEnd);
+
+            if (posA && posB) {
+              const vecA = new THREE.Vector3(...posA);
+              const vecB = new THREE.Vector3(...posB);
+              const dir = new THREE.Vector3().subVectors(vecB, vecA);
+              const len = dir.length();
+              const mid = new THREE.Vector3().addVectors(vecA, vecB).multiplyScalar(0.5);
+
+              // Quaternion orientation from (0,1,0) to dir
+              const up = new THREE.Vector3(0, 1, 0);
+              const quat = new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize());
+
+              animatedBonds.push({
+                id: `r-bond-${compIdx}-${bIdx}`,
+                startPos: posA,
+                endPos: posB,
+                midpoint: [mid.x, mid.y, mid.z],
+                quaternion: quat,
+                length: len,
+                opacity: reactantOpacity,
+                color: isTransitionStateActive ? '#f59e0b' : '#94a3b8',
+                isTransition: isTransitionStateActive,
+                order: bond.order,
+              });
+            }
+          }
+        });
+      }
     }
   });
 
-  // Interpolate Product Atoms
+  // Interpolate Product Atoms & Map 3D positions for Product Bonds
   const productAtoms: InterpolatedAtomState[] = [];
-  reaction.products.forEach((pComp) => {
+
+  reaction.products.forEach((pComp, compIdx) => {
     if (pComp.molecule_data?.atoms) {
+      const atomPosMap = new Map<number, [number, number, number]>();
+
       pComp.molecule_data.atoms.forEach((atom) => {
         const posX = atom.x + productOffset[0];
         const posY = atom.y + productOffset[1];
         const posZ = atom.z + productOffset[2];
+        const pos: [number, number, number] = [posX, posY, posZ];
+
+        atomPosMap.set(atom.index, pos);
 
         productAtoms.push({
           atom,
-          position: [posX, posY, posZ],
+          position: pos,
           opacity: productOpacity,
           scale: 1.0,
           isTransitionState: isTransitionStateActive,
         });
       });
+
+      // Calculate 3D Bonds for Product Molecule
+      if (pComp.molecule_data?.bonds) {
+        pComp.molecule_data.bonds.forEach((bond, bIdx) => {
+          const uStart = bond.start_index ?? bond.from;
+          const uEnd = bond.end_index ?? bond.to;
+
+          if (uStart !== undefined && uEnd !== undefined) {
+            const posA = atomPosMap.get(uStart);
+            const posB = atomPosMap.get(uEnd);
+
+            if (posA && posB) {
+              const vecA = new THREE.Vector3(...posA);
+              const vecB = new THREE.Vector3(...posB);
+              const dir = new THREE.Vector3().subVectors(vecB, vecA);
+              const len = dir.length();
+              const mid = new THREE.Vector3().addVectors(vecA, vecB).multiplyScalar(0.5);
+
+              const up = new THREE.Vector3(0, 1, 0);
+              const quat = new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize());
+
+              animatedBonds.push({
+                id: `p-bond-${compIdx}-${bIdx}`,
+                startPos: posA,
+                endPos: posB,
+                midpoint: [mid.x, mid.y, mid.z],
+                quaternion: quat,
+                length: len,
+                opacity: productOpacity,
+                color: '#10b981',
+                isTransition: false,
+                order: bond.order,
+              });
+            }
+          }
+        });
+      }
     }
   });
 
@@ -169,6 +271,7 @@ export const calculateAnimationFrameState = (
     stageDescription: kPrev.description,
     reactantAtoms,
     productAtoms,
+    animatedBonds,
     bondStretchFactor,
     isTransitionStateActive,
   };
