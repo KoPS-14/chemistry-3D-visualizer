@@ -17,35 +17,20 @@ _http_client = httpx.Client(
 )
 
 CHEMISTRY_SYSTEM_INSTRUCTION = """You are an expert AI Chemistry Tutor, computational chemist, and educator.
-You specialize in all branches of chemistry including:
-- Atomic structure, electron configurations, quantum numbers, and orbitals
-- Periodic table and periodic trends (electronegativity, ionization energy, atomic radius, electron affinity)
-- Chemical bonding (ionic, covalent, metallic, coordinate/dative, hydrogen bonding, van der Waals)
-- Molecular structure, VSEPR theory, molecular geometry, and polarity
-- Organic chemistry, functional groups, IUPAC nomenclature, and reaction mechanisms (SN1, SN2, E1, E2, electrophilic addition, nucleophilic addition, elimination, aromatic substitution, pericyclic)
-- Stereochemistry (chiral centers, enantiomers, diastereomers, R/S configuration, cis/trans, E/Z, Newman projections, Walden inversion)
-- Inorganic chemistry, coordination complexes, crystal field theory, transition metals, and organometallics
-- Physical chemistry, thermodynamics (enthalpy, entropy, Gibbs free energy, Hess's law)
-- Chemical kinetics (rate laws, reaction orders, Arrhenius equation, activation energy, catalysts)
-- Chemical equilibrium (Le Chatelier's principle, Kc, Kp, solubility product Ksp)
-- Acids, bases, pH, pKa, buffers, Henderson-Hasselbalch equation, and titrations
-- Electrochemistry (galvanic/electrolytic cells, Nernst equation, standard reduction potentials, electrolysis)
-- Stoichiometry, balancing reactions, limiting reactants, percent yield, mole concept, molarity, molality, and solution chemistry
-- Oxidation and reduction, redox balancing, and half-reactions
-- Chemistry calculations and numerical problem solving.
+You specialize in all branches of chemistry including atomic structure, periodic trends, chemical bonding, molecular geometry, organic mechanisms, stereochemistry, thermodynamics, kinetics, equilibrium, acids/bases, electrochemistry, and stoichiometry calculations.
 
-Guidelines for your responses:
-1. For simple or factual questions, provide clear, concise, and direct answers.
-2. For conceptual or advanced topics, provide structured, thorough, and pedagogical explanations.
-3. For numerical problems and calculations, strictly follow this step-by-step format:
-   - **Step 1 (Given Data)**: State the given quantities with units and what needs to be calculated.
-   - **Step 2 (Formula)**: State the relevant chemical or physical formula.
-   - **Step 3 (Substitution)**: Substitute the values into the formula with necessary unit conversions.
-   - **Step 4 (Calculation)**: Perform the arithmetic step-by-step.
-   - **Step 5 (Final Answer)**: State the final numerical answer clearly with units and significant figures.
-   - **Step 6 (Explanation)**: Briefly explain the physical/chemical significance of the result.
-4. For reaction mechanism questions: explain the reactants, attacking nucleophile/electrophile, electron flow, breaking and forming bonds, transition states/intermediates, stereochemical outcomes, and final products.
-5. Use clean Markdown formatting with standard chemical notation and LaTeX equations (e.g. $pH = -\\log[H^+]$, $H_2O$, $S_N2$).
+STRICT FORMATTING RULES:
+1. NEVER use LaTeX dollar signs ($), \\text{...}, \\approx, or LaTeX backslashes for regular numbers, element symbols, units, or chemical formulas.
+2. Write chemical formulas using standard Unicode subscripts: write H₂O, CO₂, O₂, Fe₂O₃, CH₄, OH⁻, H⁺, SO₄²⁻, NH₃ (NOT $\\text{H}_2\\text{O}$).
+3. Write electron configurations with Unicode superscripts: write 1s² 2s² 2p⁴ (NOT $1s^2 2s^2 2p^4$).
+4. Write numbers and properties cleanly: write "8 protons", "15.999 u", "Group 16", "Period 2", "3.44 electronegativity", "21% by volume".
+5. For calculations, state:
+   - Given Values (with units)
+   - Formula
+   - Step-by-step Calculation
+   - Final Answer with Units
+   - Brief Chemical Explanation
+6. Provide precise, direct, and well-structured information with clear bullet points and bold headers.
 """
 
 GEMINI_MODEL_CANDIDATES = [
@@ -54,6 +39,53 @@ GEMINI_MODEL_CANDIDATES = [
     "gemini-flash-latest",
     "gemini-pro-latest"
 ]
+
+
+def clean_latex_artifacts(text: str) -> str:
+    """Removes raw LaTeX formatting ($..$, \\text{..}, \\approx, etc.) for clean, precise presentation."""
+    if not text:
+        return text
+
+    # Replace \approx with ≈
+    cleaned = text.replace(r"\approx", "≈")
+    
+    # Replace \rightarrow with →, \leftarrow with ←, \rightleftharpoons with ⇌
+    cleaned = cleaned.replace(r"\rightarrow", "→").replace(r"\leftarrow", "←").replace(r"\rightleftharpoons", "⇌")
+
+    # Replace \text{...} with the content inside
+    cleaned = re.sub(r"\\text\{([^}]*)\}", r"\1", cleaned)
+
+    # Convert common LaTeX subscripts inside formulas (e.g. O_2 -> O₂, H_2O -> H₂O)
+    subscript_map = str.maketrans("0123456789+-", "₀₁₂₃₄₅₆₇₈₉₊₋")
+    superscript_map = str.maketrans("0123456789+-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻")
+
+    # Clean $...$ patterns
+    def replace_inline_math(match):
+        inner = match.group(1).strip()
+        # Remove any remaining \text{}
+        inner = re.sub(r"\\text\{([^}]*)\}", r"\1", inner)
+        # Convert _digits to subscripts
+        inner = re.sub(r"_([0-9+\-]+)", lambda m: m.group(1).translate(subscript_map), inner)
+        # Convert ^digits to superscripts
+        inner = re.sub(r"\^([0-9+\-]+)", lambda m: m.group(1).translate(superscript_map), inner)
+        # Remove stray backslashes
+        inner = inner.replace("\\", "")
+        return inner
+
+    cleaned = re.sub(r"\$([^$]+)\$", replace_inline_math, cleaned)
+
+    # Clean double dollar math blocks $$...$$
+    def replace_block_math(match):
+        inner = match.group(1).strip()
+        inner = re.sub(r"\\text\{([^}]*)\}", r"\1", inner)
+        inner = re.sub(r"_([0-9+\-]+)", lambda m: m.group(1).translate(subscript_map), inner)
+        inner = re.sub(r"\^([0-9+\-]+)", lambda m: m.group(1).translate(superscript_map), inner)
+        inner = inner.replace("\\", "")
+        return f"\n\n{inner}\n\n"
+
+    cleaned = re.sub(r"\$\$([^$]+)\$\$", replace_block_math, cleaned)
+
+    return cleaned.strip()
 
 
 class LLMService:
@@ -101,7 +133,6 @@ class LLMService:
     @staticmethod
     def _call_gemini_chat(message: str, history: List[ChatMessage], api_key: str) -> ChatResponse:
         """Calls Google Gemini GenerateContent REST API with high-speed model prioritization."""
-        # Construct Gemini multi-turn contents
         contents = []
         for msg in history[-10:]:
             role = "user" if msg.role in ("user", "human") else "model"
@@ -120,12 +151,11 @@ class LLMService:
             },
             "contents": contents,
             "generationConfig": {
-                "temperature": 0.3,
+                "temperature": 0.2,
                 "maxOutputTokens": 1024
             }
         }
 
-        # Fast model priority order
         active_model = settings.LLM_MODEL if settings.LLM_MODEL else "gemini-3.6-flash"
         models_to_try = [active_model]
         for m in GEMINI_MODEL_CANDIDATES:
@@ -144,10 +174,11 @@ class LLMService:
                         parts = candidates[0].get("content", {}).get("parts", [])
                         if parts:
                             generated_text = parts[0].get("text", "")
+                            cleaned_text = clean_latex_artifacts(generated_text)
                             return ChatResponse(
                                 status="success",
-                                answer=generated_text,
-                                reply=generated_text
+                                answer=cleaned_text,
+                                reply=cleaned_text
                             )
                 elif response.status_code == 429:
                     quota_msg = "⚠️ Gemini API rate limit or quota exceeded. Please wait a few moments before sending your next request."
@@ -182,7 +213,7 @@ class LLMService:
         payload = {
             "model": settings.LLM_MODEL if settings.LLM_MODEL else "gpt-4o-mini",
             "messages": messages_payload,
-            "temperature": 0.3
+            "temperature": 0.2
         }
 
         try:
@@ -192,10 +223,11 @@ class LLMService:
                 choices = data.get("choices", [])
                 if choices:
                     answer_text = choices[0].get("message", {}).get("content", "")
+                    cleaned_text = clean_latex_artifacts(answer_text)
                     return ChatResponse(
                         status="success",
-                        answer=answer_text,
-                        reply=answer_text
+                        answer=cleaned_text,
+                        reply=cleaned_text
                     )
             return ChatResponse(
                 status="error",

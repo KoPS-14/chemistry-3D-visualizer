@@ -302,7 +302,7 @@ export const ChemistryChatbotView: React.FC = () => {
           </button>
         </div>
         <p className="text-[10px] text-center text-slate-500 mt-2 font-mono">
-          Powered by Google Gemini 1.5 Flash • Press Enter to send • Shift + Enter for new line
+          Powered by Google Gemini 3.6 Flash • Press Enter to send • Shift + Enter for new line
         </p>
       </div>
     </div>
