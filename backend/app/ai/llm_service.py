@@ -10,6 +10,12 @@ from app.schemas.models import ChatMessage, ChatResponse, LLMStructuredOutput, R
 
 logger = logging.getLogger(__name__)
 
+# Persistent HTTP client with connection pooling and keep-alive for sub-second communication
+_http_client = httpx.Client(
+    timeout=httpx.Timeout(15.0, connect=5.0),
+    limits=httpx.Limits(max_keepalive_connections=20, max_connections=50)
+)
+
 CHEMISTRY_SYSTEM_INSTRUCTION = """You are an expert AI Chemistry Tutor, computational chemist, and educator.
 You specialize in all branches of chemistry including:
 - Atomic structure, electron configurations, quantum numbers, and orbitals
@@ -43,12 +49,10 @@ Guidelines for your responses:
 """
 
 GEMINI_MODEL_CANDIDATES = [
-    "gemini-flash-latest",
-    "gemini-3.7-flash",
     "gemini-3.6-flash",
-    "gemini-2.5-flash",
-    "gemini-pro-latest",
-    "gemini-1.5-flash"
+    "gemini-3.7-flash",
+    "gemini-flash-latest",
+    "gemini-pro-latest"
 ]
 
 
@@ -57,7 +61,7 @@ class LLMService:
     def ask_chemistry_tutor(message: str, history: Optional[List[ChatMessage]] = None) -> ChatResponse:
         """
         Dynamically answers any chemistry question using the Gemini LLM (or OpenAI fallback).
-        Maintains full conversational multi-turn history.
+        Maintains full conversational multi-turn history with high-speed connection pooling.
         """
         clean_msg = message.strip()
         if not clean_msg:
@@ -75,11 +79,11 @@ class LLMService:
                 "To enable dynamic AI Chemistry Chatbot responses powered by Google Gemini:\n\n"
                 "1. **Get a free API key** from [Google AI Studio](https://aistudio.google.com/app/apikey).\n"
                 "2. **Open your backend environment file**: `backend/.env`.\n"
-                "3. **Add your Gemini API key** (starts with `AIzaSy...`):\n"
+                "3. **Add your Gemini API key**:\n"
                 "   ```text\n"
-                "   GEMINI_API_KEY=AIzaSyYourActualKeyHere\n"
+                "   GEMINI_API_KEY=your_actual_gemini_api_key_here\n"
                 "   ```\n"
-                "4. **Save the file** and submit your question again. The chatbot will dynamically generate detailed chemistry explanations for any topic!"
+                "4. **Save the file** and submit your question again."
             )
             return ChatResponse(
                 status="error",
@@ -88,7 +92,6 @@ class LLMService:
                 error="GEMINI_API_KEY is not configured in backend/.env"
             )
 
-        # Call LLM based on provider
         provider = settings.LLM_PROVIDER.lower()
         if "gemini" in provider or settings.GEMINI_API_KEY:
             return LLMService._call_gemini_chat(clean_msg, history or [], api_key)
@@ -97,24 +100,10 @@ class LLMService:
 
     @staticmethod
     def _call_gemini_chat(message: str, history: List[ChatMessage], api_key: str) -> ChatResponse:
-        """Calls Google Gemini GenerateContent REST API with system instructions and multi-turn history."""
-        # Check key format warning
-        if not api_key.startswith("AIzaSy"):
-            key_format_hint = (
-                "### ⚠️ Gemini API Key Format Notice\n\n"
-                f"Your API key currently starts with `{api_key[:6]}...`. Google AI Studio Gemini API keys always start with **`AIzaSy...`** (39 characters).\n\n"
-                "#### 🔑 How to get your free Google AI Studio key:\n"
-                "1. Open [**https://aistudio.google.com/app/apikey**](https://aistudio.google.com/app/apikey) in your browser.\n"
-                "2. Click **'Create API key'** (free, no billing required).\n"
-                "3. Copy the key starting with `AIzaSy...`.\n"
-                "4. Open `backend/.env` and set `GEMINI_API_KEY=AIzaSy...`.\n"
-                "5. Save the file and your questions will be dynamically answered by Gemini!"
-            )
-            logger.warning("GEMINI_API_KEY does not start with AIzaSy. It might be invalid for Google AI Studio.")
-
+        """Calls Google Gemini GenerateContent REST API with high-speed model prioritization."""
         # Construct Gemini multi-turn contents
         contents = []
-        for msg in history[-12:]:
+        for msg in history[-10:]:
             role = "user" if msg.role in ("user", "human") else "model"
             contents.append({
                 "role": role,
@@ -131,13 +120,14 @@ class LLMService:
             },
             "contents": contents,
             "generationConfig": {
-                "temperature": 0.4,
-                "maxOutputTokens": 2048
+                "temperature": 0.3,
+                "maxOutputTokens": 1024
             }
         }
 
-        # Model preference order
-        models_to_try = [settings.LLM_MODEL] if settings.LLM_MODEL in GEMINI_MODEL_CANDIDATES else []
+        # Fast model priority order
+        active_model = settings.LLM_MODEL if settings.LLM_MODEL else "gemini-3.6-flash"
+        models_to_try = [active_model]
         for m in GEMINI_MODEL_CANDIDATES:
             if m not in models_to_try:
                 models_to_try.append(m)
@@ -145,53 +135,38 @@ class LLMService:
         for model_name in models_to_try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
             try:
-                with httpx.Client(timeout=25.0) as client:
-                    response = client.post(url, json=payload)
+                response = _http_client.post(url, json=payload)
 
-                    if response.status_code == 200:
-                        data = response.json()
-                        candidates = data.get("candidates", [])
-                        if candidates:
-                            parts = candidates[0].get("content", {}).get("parts", [])
-                            if parts:
-                                generated_text = parts[0].get("text", "")
-                                return ChatResponse(
-                                    status="success",
-                                    answer=generated_text,
-                                    reply=generated_text
-                                )
-                    elif response.status_code == 429:
-                        quota_msg = (
-                            "### ⚠️ Gemini API Rate Limit / Quota Exceeded (429)\n\n"
-                            "Your Gemini API key has exceeded its current request quota. "
-                            "Please wait a few moments before sending your next request, or create a new free API key at [Google AI Studio](https://aistudio.google.com/app/apikey)."
-                        )
-                        return ChatResponse(status="error", answer=quota_msg, reply=quota_msg, error="Rate limit (429)")
-                    elif response.status_code in (400, 401, 403, 404):
-                        continue
-            except Exception:
+                if response.status_code == 200:
+                    data = response.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        if parts:
+                            generated_text = parts[0].get("text", "")
+                            return ChatResponse(
+                                status="success",
+                                answer=generated_text,
+                                reply=generated_text
+                            )
+                elif response.status_code == 429:
+                    quota_msg = "⚠️ Gemini API rate limit or quota exceeded. Please wait a few moments before sending your next request."
+                    return ChatResponse(status="error", answer=quota_msg, reply=quota_msg, error="Rate limit (429)")
+                elif response.status_code in (400, 401, 403, 404):
+                    continue
+            except Exception as e:
+                logger.warning(f"Model {model_name} attempt error: {e}")
                 continue
 
-        # If all API calls failed, give actionable guidance
-        guidance = (
-            "### ⚠️ Google Gemini API Key Setup\n\n"
-            "The Google Gemini API returned `404 / 400` with the current key.\n\n"
-            "Google AI Studio keys start with **`AIzaSy...`** (e.g. `AIzaSyD-12345...`).\n\n"
-            "#### 🔑 To fix this in 30 seconds:\n"
-            "1. Visit [**https://aistudio.google.com/app/apikey**](https://aistudio.google.com/app/apikey)\n"
-            "2. Click **'Create API key'**\n"
-            "3. Copy the key starting with **`AIzaSy`**\n"
-            "4. Open `backend/.env` and update:\n"
-            "   ```text\n"
-            "   GEMINI_API_KEY=AIzaSyYourActualKeyHere\n"
-            "   ```\n"
-            "5. Save the file and ask any question!"
+        return ChatResponse(
+            status="error",
+            answer="⚠️ Unable to generate response from Gemini API. Please check your network connection.",
+            reply="⚠️ Unable to generate response from Gemini API.",
+            error="Connection or API failure"
         )
-        return ChatResponse(status="error", answer=guidance, reply=guidance, error="Invalid API key or model")
 
     @staticmethod
     def _call_openai_chat(message: str, history: List[ChatMessage], api_key: str) -> ChatResponse:
-        """Calls OpenAI Chat Completions API with system instructions and multi-turn history."""
         url = "https://api.openai.com/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -199,7 +174,7 @@ class LLMService:
         }
 
         messages_payload = [{"role": "system", "content": CHEMISTRY_SYSTEM_INSTRUCTION}]
-        for msg in history[-12:]:
+        for msg in history[-10:]:
             role = "user" if msg.role in ("user", "human") else "assistant"
             messages_payload.append({"role": role, "content": msg.content})
         messages_payload.append({"role": "user", "content": message})
@@ -207,34 +182,32 @@ class LLMService:
         payload = {
             "model": settings.LLM_MODEL if settings.LLM_MODEL else "gpt-4o-mini",
             "messages": messages_payload,
-            "temperature": 0.4
+            "temperature": 0.3
         }
 
         try:
-            with httpx.Client(timeout=25.0) as client:
-                response = client.post(url, headers=headers, json=payload)
-                if response.status_code == 200:
-                    data = response.json()
-                    choices = data.get("choices", [])
-                    if choices:
-                        answer_text = choices[0].get("message", {}).get("content", "")
-                        return ChatResponse(
-                            status="success",
-                            answer=answer_text,
-                            reply=answer_text
-                        )
-                return ChatResponse(
-                    status="error",
-                    answer=f"⚠️ OpenAI API returned status code {response.status_code}.",
-                    reply=f"⚠️ OpenAI API returned status code {response.status_code}.",
-                    error=response.text
-                )
+            response = _http_client.post(url, headers=headers, json=payload)
+            if response.status_code == 200:
+                data = response.json()
+                choices = data.get("choices", [])
+                if choices:
+                    answer_text = choices[0].get("message", {}).get("content", "")
+                    return ChatResponse(
+                        status="success",
+                        answer=answer_text,
+                        reply=answer_text
+                    )
+            return ChatResponse(
+                status="error",
+                answer=f"⚠️ OpenAI API returned status code {response.status_code}.",
+                reply=f"⚠️ OpenAI API returned status code {response.status_code}.",
+                error=response.text
+            )
         except Exception as e:
             return ChatResponse(status="error", answer=str(e), reply=str(e), error=str(e))
 
     @staticmethod
     def parse_prompt(prompt: str) -> LLMStructuredOutput:
-        """Translates a natural language 3D visualization prompt into structured JSON."""
         clean = prompt.strip()
         if not clean:
             return LLMStructuredOutput(request_type="unsupported", confidence=0.0)
@@ -258,8 +231,9 @@ class LLMService:
             "For reaction: {\"request_type\": \"reaction\", \"reaction_type\": \"SN2\", \"reactants\": [], \"products\": [], \"confidence\": 0.90}"
         )
 
+        model = settings.LLM_MODEL if settings.LLM_MODEL else "gemini-3.6-flash"
         if "gemini" in settings.LLM_PROVIDER.lower() or settings.GEMINI_API_KEY:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.LLM_MODEL}:generateContent?key={api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             payload = {
                 "contents": [
                     {"role": "user", "parts": [{"text": f"{system_prompt}\n\nUser Prompt: {prompt}"}]}
@@ -267,14 +241,13 @@ class LLMService:
                 "generationConfig": {"responseMimeType": "application/json"}
             }
             try:
-                with httpx.Client(timeout=10.0) as client:
-                    resp = client.post(url, json=payload)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        parts = data.get("candidates", [])[0].get("content", {}).get("parts", [])
-                        if parts:
-                            parsed = json.loads(parts[0].get("text", ""))
-                            return LLMStructuredOutput(**parsed)
+                resp = _http_client.post(url, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    parts = data.get("candidates", [])[0].get("content", {}).get("parts", [])
+                    if parts:
+                        parsed = json.loads(parts[0].get("text", ""))
+                        return LLMStructuredOutput(**parsed)
             except Exception:
                 pass
 
@@ -286,13 +259,12 @@ class LLMService:
             "response_format": {"type": "json_object"}
         }
         try:
-            with httpx.Client(timeout=10.0) as client:
-                resp = client.post(url, headers=headers, json=payload)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    content = data["choices"][0]["message"]["content"]
-                    if content:
-                        return LLMStructuredOutput(**json.loads(content))
+            resp = _http_client.post(url, headers=headers, json=payload)
+            if resp.status_code == 200:
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+                if content:
+                    return LLMStructuredOutput(**json.loads(content))
         except Exception:
             pass
 
