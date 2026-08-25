@@ -10,157 +10,204 @@ from app.schemas.models import ChatMessage, ChatResponse, LLMStructuredOutput, R
 
 logger = logging.getLogger(__name__)
 
-KNOWN_MOLECULES = {
-    "ethanol": "CCO",
-    "ethyl alcohol": "CCO",
-    "water": "O",
-    "dihydrogen monoxide": "O",
-    "methane": "C",
-    "methanol": "CO",
-    "methyl alcohol": "CO",
-    "ethane": "CC",
-    "propane": "CCC",
-    "carbon dioxide": "O=C=O",
-    "co2": "O=C=O",
-    "benzene": "c1ccccc1",
-    "aspirin": "CC(=O)Oc1ccccc1C(=O)O",
-    "acetone": "CC(=O)C",
-    "acetic acid": "CC(=O)O",
-    "vinegar": "CC(=O)O",
-    "ammonia": "N",
-    "methyl bromide": "CBr",
-    "bromomethane": "CBr",
-    "hydroxide": "[OH-]",
-    "glucose": "C(C1C(C(C(C(O1)O)O)O)O)O"
-}
+CHEMISTRY_SYSTEM_INSTRUCTION = """You are an expert AI Chemistry Tutor, computational chemist, and educator.
+You specialize in all branches of chemistry including:
+- Atomic structure, electron configurations, quantum numbers, and orbitals
+- Periodic table and periodic trends (electronegativity, ionization energy, atomic radius, electron affinity)
+- Chemical bonding (ionic, covalent, metallic, coordinate/dative, hydrogen bonding, van der Waals)
+- Molecular structure, VSEPR theory, molecular geometry, and polarity
+- Organic chemistry, functional groups, IUPAC nomenclature, and reaction mechanisms (SN1, SN2, E1, E2, electrophilic addition, nucleophilic addition, elimination, aromatic substitution, pericyclic)
+- Stereochemistry (chiral centers, enantiomers, diastereomers, R/S configuration, cis/trans, E/Z, Newman projections, Walden inversion)
+- Inorganic chemistry, coordination complexes, crystal field theory, transition metals, and organometallics
+- Physical chemistry, thermodynamics (enthalpy, entropy, Gibbs free energy, Hess's law)
+- Chemical kinetics (rate laws, reaction orders, Arrhenius equation, activation energy, catalysts)
+- Chemical equilibrium (Le Chatelier's principle, Kc, Kp, solubility product Ksp)
+- Acids, bases, pH, pKa, buffers, Henderson-Hasselbalch equation, and titrations
+- Electrochemistry (galvanic/electrolytic cells, Nernst equation, standard reduction potentials, electrolysis)
+- Stoichiometry, balancing reactions, limiting reactants, percent yield, mole concept, molarity, molality, and solution chemistry
+- Oxidation and reduction, redox balancing, and half-reactions
+- Chemistry calculations and numerical problem solving.
 
-# Comprehensive Offline Chemistry Tutor Knowledge Engine
-TUTOR_KNOWLEDGE_BASE = [
-    {
-        "keywords": ["nucleophile", "nucleophilic", "what is a nucleophile"],
-        "reply": (
-            "### 🧪 What is a Nucleophile?\n\n"
-            "A **Nucleophile** ('nucleus-loving') is an electron-rich chemical species that donates an electron pair "
-            "to an **Electrophile** ('electron-loving') to form a covalent bond.\n\n"
-            "#### 🔑 Key Characteristics:\n"
-            "- **Electron Donor**: Possesses unshared lone pairs (e.g. $\\text{OH}^-$, $\\text{NH}_3$) or $\\pi$-bonds.\n"
-            "- **Lewis Base**: All nucleophiles act as Lewis bases.\n"
-            "- **Reactivity Factor**: Nucleophilicity increases with negative charge density and decreases with steric hindrance.\n\n"
-            "#### ⚡ Example Mechanism:\n"
-            "In an **$S_N2$ substitution**, Hydroxide ($\\text{OH}^-$) acts as a nucleophile attacking Methyl Bromide ($\\text{CH}_3\\text{Br}$)."
-        ),
-        "key_concepts": ["Nucleophile", "Lewis Base", "Electron Pair Donor", "SN2 Mechanism"],
-        "suggested_visualize_prompt": "SN2 Reaction Methyl Bromide + Hydroxide",
-        "suggested_followups": [
-            "What is the difference between nucleophilicity and basicity?",
-            "What is an electrophile?",
-            "How does steric hindrance affect SN2 reactions?"
-        ]
-    },
-    {
-        "keywords": ["electrophile", "electrophilic", "what is an electrophile"],
-        "reply": (
-            "### ⚛️ What is an Electrophile?\n\n"
-            "An **Electrophile** ('electron-loving') is an electron-deficient species that accepts an electron pair "
-            "from a nucleophile to form a covalent bond.\n\n"
-            "#### 🔑 Key Characteristics:\n"
-            "- **Electron Acceptor**: Possesses partial or full positive charges or open valence shell orbitals.\n"
-            "- **Lewis Acid**: All electrophiles act as Lewis acids (e.g. $\\text{H}^+$, $\\text{AlCl}_3$, Carbocations).\n"
-            "- **Common Examples**: Carbonyl carbons ($C=O$), alkyl halides ($R-X$), and carbocations ($R^+$)."
-        ),
-        "key_concepts": ["Electrophile", "Lewis Acid", "Electron Acceptor", "Carbocation"],
-        "suggested_visualize_prompt": "SN2 Reaction Methyl Bromide + Hydroxide",
-        "suggested_followups": [
-            "What is a carbocation intermediate?",
-            "Explain electrophilic aromatic substitution",
-            "What makes a good leaving group?"
-        ]
-    },
-    {
-        "keywords": ["sn1", "sn2", "sn1 vs sn2", "difference between sn1 and sn2"],
-        "reply": (
-            "### 🔄 $S_N1$ vs $S_N2$ Reaction Comparison\n\n"
-            "| Feature | $S_N1$ (Unimolecular) | $S_N2$ (Bimolecular) |\n"
-            "|---|---|---|\n"
-            "| **Mechanism** | 2-Step (Carbocation Intermediate) | 1-Step (Concerted Transition State) |\n"
-            "| **Rate Law** | $\\text{Rate} = k[\\text{Substrate}]$ | $\\text{Rate} = k[\\text{Substrate}][\\text{Nucleophile}]$ |\n"
-            "| **Substrate Order** | $3^\\circ > 2^\\circ \\gg 1^\\circ$ (Carbocation stability) | $1^\\circ > 2^\\circ \\gg 3^\\circ$ (Steric hindrance) |\n"
-            "| **Stereochemistry** | Racemization (50% R / 50% S) | 100% Walden Inversion (Umbrella Flip) |\n"
-            "| **Preferred Solvent** | Polar Protic ($\\text{H}_2\\text{O}$, $\\text{MeOH}$) | Polar Aprotic (Acetone, DMSO) |\n\n"
-            "#### ⚡ Transition Complex:\n"
-            "In $S_N2$, the nucleophile performs a **back-side attack**, resulting in a pentacoordinate transition state."
-        ),
-        "key_concepts": ["SN1 Mechanism", "SN2 Mechanism", "Walden Inversion", "Carbocation Intermediate"],
-        "suggested_visualize_prompt": "SN2 Reaction Methyl Bromide + Hydroxide",
-        "suggested_followups": [
-            "Why do tertiary alkyl halides undergo SN1 reactions?",
-            "What solvent favors SN2 reactions?",
-            "What is Walden inversion?"
-        ]
-    },
-    {
-        "keywords": ["water", "polar", "why is water polar", "h2o"],
-        "reply": (
-            "### 💧 Why is Water ($\\text{H}_2\\text{O}$) Polar?\n\n"
-            "Water is a polar molecule due to its **asymmetric electron distribution** and **bent 3D geometry**:\n"
-            "1. **Electronegativity Difference**: Oxygen ($\\chi = 3.44$) strongly attracts shared valence electrons away from Hydrogen ($\\chi = 2.20$).\n"
-            "2. **Bent Geometry ($\\sim 104.5^\\circ$)**: The 2 non-bonding lone pairs on Oxygen push the O-H bonds downward, creating a net dipole moment ($\\mu = 1.85\\text{ D}$).\n\n"
-            "#### 🌟 Impact:\n"
-            "This high polarity enables extensive **hydrogen bonding**, leading to high surface tension, universal solvent capabilities, and high boiling point."
-        ),
-        "key_concepts": ["Polarity", "Electronegativity", "Bent Geometry", "Hydrogen Bonding"],
-        "suggested_visualize_prompt": "Water",
-        "suggested_followups": [
-            "What is hydrogen bonding?",
-            "Why does ice float on liquid water?",
-            "What is dipole moment?"
-        ]
-    },
-    {
-        "keywords": ["acid", "base", "neutralization", "ph", "acid base"],
-        "reply": (
-            "### 🧪 Acid-Base Reactions & Neutralization\n\n"
-            "According to the **Brønsted-Lowry Theory**:\n"
-            "- **Acid**: Proton ($\\text{H}^+$) donor.\n"
-            "- **Base**: Proton ($\\text{H}^+$) acceptor.\n\n"
-            "#### ⚡ Neutralization Reaction:\n"
-            "$$\\text{HCl} + \\text{NaOH} \\rightarrow \\text{NaCl} + \\text{H}_2\\text{O}$$\n"
-            "Net Ionic Equation: $\\text{H}^+ + \\text{OH}^- \\rightarrow \\text{H}_2\\text{O}$\n\n"
-            "The $\\text{pH}$ scale measures hydronium ion concentration: $\\text{pH} = -\\log_{10}[\\text{H}_3\\text{O}^+]$."
-        ),
-        "key_concepts": ["Acid-Base", "Neutralization", "Brønsted-Lowry", "pH Scale"],
-        "suggested_visualize_prompt": "Acid Base Reaction HNO3 + KOH",
-        "suggested_followups": [
-            "What is a conjugate acid-base pair?",
-            "What is a buffer solution?",
-            "Explain Lewis acid vs Brønsted acid"
-        ]
-    },
-    {
-        "keywords": ["periodic table", "element", "atomic number", "orbitals", "shells"],
-        "reply": (
-            "### ⚛️ Periodic Table & Atomic Structure\n\n"
-            "The **Periodic Table** organizes 118 chemical elements based on atomic number ($Z$) and electron configurations.\n\n"
-            "#### 📊 Structural Organization:\n"
-            "- **Periods (Rows 1–7)**: Indicate principal quantum shell numbers ($n=1,2,3...$).\n"
-            "- **Groups (Columns 1–18)**: Elements in the same group share identical valence electron numbers.\n"
-            "- **Subshells ($s, p, d, f$)**: Dictate maximum electron capacities ($s=2, p=6, d=10, f=14$).\n\n"
-            "Click any element in our **3D Periodic Table Explorer** to view its 3D atomic nucleus and electron orbital shells!"
-        ),
-        "key_concepts": ["Periodic Table", "Atomic Number", "Electron Shells", "Valence Electrons"],
-        "suggested_visualize_prompt": "Gold",
-        "suggested_followups": [
-            "What is electronegativity?",
-            "Explain periodic trends in atomic radius",
-            "Why are noble gases unreactive?"
-        ]
-    }
-]
+Guidelines for your responses:
+1. For simple or factual questions, provide clear, concise, and direct answers.
+2. For conceptual or advanced topics, provide structured, thorough, and pedagogical explanations.
+3. For numerical problems and calculations, strictly follow this step-by-step format:
+   - **Step 1 (Given Data)**: State the given quantities with units and what needs to be calculated.
+   - **Step 2 (Formula)**: State the relevant chemical or physical formula.
+   - **Step 3 (Substitution)**: Substitute the values into the formula with necessary unit conversions.
+   - **Step 4 (Calculation)**: Perform the arithmetic step-by-step.
+   - **Step 5 (Final Answer)**: State the final numerical answer clearly with units and significant figures.
+   - **Step 6 (Explanation)**: Briefly explain the physical/chemical significance of the result.
+4. For reaction mechanism questions: explain the reactants, attacking nucleophile/electrophile, electron flow, breaking and forming bonds, transition states/intermediates, stereochemical outcomes, and final products.
+5. Use clean Markdown formatting with standard chemical notation and LaTeX equations (e.g. $pH = -\\log[H^+]$, $H_2O$, $S_N2$).
+"""
 
 
 class LLMService:
     @staticmethod
+    def ask_chemistry_tutor(message: str, history: Optional[List[ChatMessage]] = None) -> ChatResponse:
+        """
+        Dynamically answers any chemistry question using the Gemini LLM (or OpenAI fallback).
+        Maintains full conversational multi-turn history.
+        """
+        clean_msg = message.strip()
+        if not clean_msg:
+            return ChatResponse(
+                status="error",
+                answer="Please enter a chemistry question.",
+                reply="Please enter a chemistry question.",
+                error="Empty message"
+            )
+
+        api_key = settings.active_api_key
+        if not api_key:
+            missing_key_guidance = (
+                "### 🔑 Gemini API Key Configuration Required\n\n"
+                "To enable dynamic AI Chemistry Chatbot responses powered by Google Gemini:\n\n"
+                "1. **Get a free API key** from [Google AI Studio](https://aistudio.google.com/).\n"
+                "2. **Open your backend environment file**: `backend/.env`.\n"
+                "3. **Add your Gemini API key**:\n"
+                "   ```text\n"
+                "   GEMINI_API_KEY=your_actual_gemini_api_key_here\n"
+                "   ```\n"
+                "4. **Save the file** and submit your question again. The chatbot will dynamically generate detailed, step-by-step chemistry explanations for any topic!"
+            )
+            return ChatResponse(
+                status="error",
+                answer=missing_key_guidance,
+                reply=missing_key_guidance,
+                error="GEMINI_API_KEY is not configured in backend/.env"
+            )
+
+        # Call LLM based on provider
+        provider = settings.LLM_PROVIDER.lower()
+        if "gemini" in provider or settings.GEMINI_API_KEY:
+            return LLMService._call_gemini_chat(clean_msg, history or [], api_key)
+        else:
+            return LLMService._call_openai_chat(clean_msg, history or [], api_key)
+
+    @staticmethod
+    def _call_gemini_chat(message: str, history: List[ChatMessage], api_key: str) -> ChatResponse:
+        """Calls Google Gemini GenerateContent REST API with system instructions and multi-turn history."""
+        model_name = settings.LLM_MODEL if settings.LLM_MODEL else "gemini-1.5-flash"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+
+        # Construct Gemini multi-turn contents
+        contents = []
+        for msg in history[-12:]:  # Pass last 12 messages for rich conversational context
+            role = "user" if msg.role in ("user", "human") else "model"
+            contents.append({
+                "role": role,
+                "parts": [{"text": msg.content}]
+            })
+        contents.append({
+            "role": "user",
+            "parts": [{"text": message}]
+        })
+
+        payload = {
+            "system_instruction": {
+                "parts": [{"text": CHEMISTRY_SYSTEM_INSTRUCTION}]
+            },
+            "contents": contents,
+            "generationConfig": {
+                "temperature": 0.4,
+                "maxOutputTokens": 2048
+            }
+        }
+
+        try:
+            with httpx.Client(timeout=25.0) as client:
+                response = client.post(url, json=payload)
+
+                if response.status_code == 200:
+                    data = response.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        if parts:
+                            generated_text = parts[0].get("text", "")
+                            return ChatResponse(
+                                status="success",
+                                answer=generated_text,
+                                reply=generated_text
+                            )
+                    return ChatResponse(
+                        status="error",
+                        answer="No text was generated by Gemini. Please rephrase your question.",
+                        reply="No text was generated by Gemini. Please rephrase your question.",
+                        error="Empty candidate response"
+                    )
+
+                elif response.status_code == 429:
+                    error_msg = "⚠️ Gemini API rate limit exceeded. Please wait a moment before asking your next question."
+                    return ChatResponse(status="error", answer=error_msg, reply=error_msg, error="Rate limit (429)")
+
+                elif response.status_code in (400, 401, 403):
+                    error_body = response.text
+                    error_msg = f"⚠️ Gemini API Authentication Error ({response.status_code}). Please verify that your `GEMINI_API_KEY` in `backend/.env` is valid."
+                    logger.error(f"Gemini API Error: {error_body}")
+                    return ChatResponse(status="error", answer=error_msg, reply=error_msg, error=f"Auth error {response.status_code}")
+
+                else:
+                    error_msg = f"⚠️ Gemini API returned status code {response.status_code}."
+                    logger.error(f"Gemini error response: {response.text}")
+                    return ChatResponse(status="error", answer=error_msg, reply=error_msg, error=f"Status {response.status_code}")
+
+        except httpx.TimeoutException:
+            timeout_msg = "⚠️ Request to Gemini timed out. Please check your internet connection and try again."
+            return ChatResponse(status="error", answer=timeout_msg, reply=timeout_msg, error="Timeout")
+        except Exception as e:
+            logger.error(f"Gemini request exception: {e}")
+            err_text = f"⚠️ Error communicating with Gemini API: {str(e)}"
+            return ChatResponse(status="error", answer=err_text, reply=err_text, error=str(e))
+
+    @staticmethod
+    def _call_openai_chat(message: str, history: List[ChatMessage], api_key: str) -> ChatResponse:
+        """Calls OpenAI Chat Completions API with system instructions and multi-turn history."""
+        url = "https://api.openai.com/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+        messages_payload = [{"role": "system", "content": CHEMISTRY_SYSTEM_INSTRUCTION}]
+        for msg in history[-12:]:
+            role = "user" if msg.role in ("user", "human") else "assistant"
+            messages_payload.append({"role": role, "content": msg.content})
+        messages_payload.append({"role": "user", "content": message})
+
+        payload = {
+            "model": settings.LLM_MODEL if settings.LLM_MODEL else "gpt-4o-mini",
+            "messages": messages_payload,
+            "temperature": 0.4
+        }
+
+        try:
+            with httpx.Client(timeout=25.0) as client:
+                response = client.post(url, headers=headers, json=payload)
+                if response.status_code == 200:
+                    data = response.json()
+                    choices = data.get("choices", [])
+                    if choices:
+                        answer_text = choices[0].get("message", {}).get("content", "")
+                        return ChatResponse(
+                            status="success",
+                            answer=answer_text,
+                            reply=answer_text
+                        )
+                return ChatResponse(
+                    status="error",
+                    answer=f"⚠️ OpenAI API returned status code {response.status_code}.",
+                    reply=f"⚠️ OpenAI API returned status code {response.status_code}.",
+                    error=response.text
+                )
+        except Exception as e:
+            return ChatResponse(status="error", answer=str(e), reply=str(e), error=str(e))
+
+    @staticmethod
     def parse_prompt(prompt: str) -> LLMStructuredOutput:
+        """Translates a natural language 3D visualization prompt into structured JSON."""
         clean = prompt.strip()
         if not clean:
             return LLMStructuredOutput(request_type="unsupported", confidence=0.0)
@@ -168,159 +215,18 @@ class LLMService:
         api_key = settings.active_api_key
         if api_key:
             try:
-                res = LLMService._call_external_llm(clean)
+                res = LLMService._call_external_prompt_parser(clean, api_key)
                 if res and res.confidence > 0.3:
                     return res
             except Exception as e:
-                logger.warning(f"LLM API parse failed, using fallback: {e}")
+                logger.warning(f"LLM 3D prompt parser failed, using rule-based fallback: {e}")
 
         return LLMService._fallback_parse_prompt(clean)
 
     @staticmethod
-    def ask_chemistry_tutor(message: str, history: Optional[List[ChatMessage]] = None) -> ChatResponse:
-        """
-        AI Chemistry Tutor query handler. Uses Gemini / OpenAI API if API key is present,
-        or intelligently synthesizes responses via the Knowledge Engine.
-        """
-        clean_msg = message.strip()
-        if not clean_msg:
-            return ChatResponse(status="error", reply="Please enter a valid chemistry question.")
-
-        api_key = settings.active_api_key
-        if api_key:
-            try:
-                llm_reply = LLMService._call_tutor_llm(clean_msg, history or [])
-                if llm_reply:
-                    return llm_reply
-            except Exception as e:
-                logger.warning(f"Tutor API call failed: {e}. Switching to Knowledge Engine.")
-
-        # Knowledge Base lookup
-        lower_msg = clean_msg.lower()
-        for item in TUTOR_KNOWLEDGE_BASE:
-            if any(kw in lower_msg for kw in item["keywords"]):
-                return ChatResponse(
-                    status="success",
-                    reply=item["reply"],
-                    key_concepts=item["key_concepts"],
-                    suggested_visualize_prompt=item.get("suggested_visualize_prompt"),
-                    suggested_followups=item.get("suggested_followups", [])
-                )
-
-        # Dynamic chemistry response generator for general user questions
-        topic_title = clean_msg.strip("? .!").title()
-        return ChatResponse(
-            status="success",
-            reply=(
-                f"### 🧪 AI Chemistry Tutor: {topic_title}\n\n"
-                f"Great question regarding **{clean_msg}**!\n\n"
-                f"#### 💡 Overview:\n"
-                f"In chemistry, **{clean_msg}** touches upon fundamental principles of molecular structure, chemical bonding, and thermodynamics.\n\n"
-                f"#### 🔑 Key Concepts to Consider:\n"
-                f"- **3D Spatial Geometry**: Molecular properties are dictated by electron domain repulsions ($VSEPR$) and spatial symmetry.\n"
-                f"- **Reaction Kinetics**: Reactions occur through active collisions exceeding activation energy ($E_a$).\n"
-                f"- **3D Visualization**: You can enter any molecule (e.g. *Ethanol*, *Water*, *Benzene*) or reaction (e.g. *SN2*, *Acid-Base*, *Combustion*) in the search box to view its full 3D interactive model!"
-            ),
-            key_concepts=["Molecular Structure", "Reaction Kinetics", "Chemical Bonding"],
-            suggested_visualize_prompt="Water",
-            suggested_followups=[
-                "What is a nucleophile?",
-                "Explain $S_N1$ vs $S_N2$ mechanisms",
-                "Why is water polar?"
-            ]
-        )
-
-    @staticmethod
-    def _call_tutor_llm(message: str, history: List[ChatMessage]) -> Optional[ChatResponse]:
-        api_key = settings.active_api_key
-        if not api_key:
-            return None
-
+    def _call_external_prompt_parser(prompt: str, api_key: str) -> Optional[LLMStructuredOutput]:
         system_prompt = (
-            "You are an expert AI Chemistry Tutor for university and high school students. "
-            "Provide clear, enthusiastic, structured markdown explanations with LaTeX formatting. "
-            "Output STRICT JSON matching schema:\n"
-            "{\n"
-            '  "reply": "markdown answer string",\n'
-            '  "key_concepts": ["concept1", "concept2"],\n'
-            '  "suggested_visualize_prompt": "Molecule or Reaction prompt to visualize in 3D" or null,\n'
-            '  "suggested_followups": ["Question 1", "Question 2", "Question 3"]\n'
-            "}"
-        )
-
-        # Google Gemini API Call
-        if "gemini" in settings.LLM_PROVIDER.lower() or settings.GEMINI_API_KEY:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.LLM_MODEL}:generateContent?key={api_key}"
-            prompt_text = f"{system_prompt}\n\nUser Question: {message}"
-            payload = {
-                "contents": [
-                    {"role": "user", "parts": [{"text": prompt_text}]}
-                ],
-                "generationConfig": {
-                    "responseMimeType": "application/json",
-                    "temperature": 0.3
-                }
-            }
-
-            with httpx.Client(timeout=12.0) as client:
-                resp = client.post(url, json=payload)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    parts = data.get("candidates", [])[0].get("content", {}).get("parts", [])
-                    if parts:
-                        text_content = parts[0].get("text", "")
-                        parsed = json.loads(text_content)
-                        return ChatResponse(
-                            status="success",
-                            reply=parsed.get("reply", ""),
-                            key_concepts=parsed.get("key_concepts", []),
-                            suggested_visualize_prompt=parsed.get("suggested_visualize_prompt"),
-                            suggested_followups=parsed.get("suggested_followups", [])
-                        )
-
-        # OpenAI API Call Fallback
-        url = "https://api.openai.com/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-        messages_payload = [{"role": "system", "content": system_prompt}]
-        for h in history[-6:]:
-            messages_payload.append({"role": h.role, "content": h.content})
-        messages_payload.append({"role": "user", "content": message})
-
-        payload = {
-            "model": settings.LLM_MODEL,
-            "messages": messages_payload,
-            "temperature": 0.3,
-            "response_format": {"type": "json_object"}
-        }
-
-        with httpx.Client(timeout=12.0) as client:
-            resp = client.post(url, headers=headers, json=payload)
-            if resp.status_code == 200:
-                data = resp.json()
-                content = data["choices"][0]["message"]["content"]
-                if content:
-                    parsed = json.loads(content)
-                    return ChatResponse(
-                        status="success",
-                        reply=parsed.get("reply", ""),
-                        key_concepts=parsed.get("key_concepts", []),
-                        suggested_visualize_prompt=parsed.get("suggested_visualize_prompt"),
-                        suggested_followups=parsed.get("suggested_followups", [])
-                    )
-
-        return None
-
-    @staticmethod
-    def _call_external_llm(prompt: str) -> Optional[LLMStructuredOutput]:
-        api_key = settings.active_api_key
-        if not api_key:
-            return None
-
-        system_prompt = (
-            "You are a chemistry translation AI. Output ONLY valid JSON matching schema:\n"
+            "You are a chemistry structure translator. Output ONLY valid JSON matching schema:\n"
             "For molecule: {\"request_type\": \"molecule\", \"name\": \"name\", \"smiles\": \"SMILES\", \"confidence\": 0.95}\n"
             "For reaction: {\"request_type\": \"reaction\", \"reaction_type\": \"SN2\", \"reactants\": [], \"products\": [], \"confidence\": 0.90}"
         )
@@ -329,7 +235,7 @@ class LLMService:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.LLM_MODEL}:generateContent?key={api_key}"
             payload = {
                 "contents": [
-                    {"role": "user", "parts": [{"text": f"{system_prompt}\n\nPrompt: {prompt}"}]}
+                    {"role": "user", "parts": [{"text": f"{system_prompt}\n\nUser Prompt: {prompt}"}]}
                 ],
                 "generationConfig": {"responseMimeType": "application/json"}
             }
@@ -387,6 +293,27 @@ class LLMService:
                     confidence=0.96
                 )
 
+        from app.chemistry.lookup_service import LookupService
+        KNOWN_MOLECULES = {
+            "ethanol": "CCO",
+            "water": "O",
+            "methane": "C",
+            "methanol": "CO",
+            "ethane": "CC",
+            "propane": "CCC",
+            "carbon dioxide": "O=C=O",
+            "co2": "O=C=O",
+            "benzene": "c1ccccc1",
+            "aspirin": "CC(=O)Oc1ccccc1C(=O)O",
+            "acetone": "CC(=O)C",
+            "acetic acid": "CC(=O)O",
+            "ammonia": "N",
+            "methyl bromide": "CBr",
+            "bromomethane": "CBr",
+            "hydroxide": "[OH-]",
+            "glucose": "C(C1C(C(C(C(O1)O)O)O)O)O"
+        }
+
         for name, smiles in KNOWN_MOLECULES.items():
             if name in lower_prompt and not is_reaction_prompt:
                 return LLMStructuredOutput(
@@ -395,17 +322,6 @@ class LLMService:
                     smiles=smiles,
                     confidence=0.98
                 )
-
-        if rxn_match:
-            return LLMStructuredOutput(
-                request_type="reaction",
-                name=rxn_match["name"],
-                reaction_type=rxn_match["reaction_type"],
-                reactants=[ReactantOrProduct(**r) for r in rxn_match.get("reactants", [])],
-                products=[ReactantOrProduct(**p) for p in rxn_match.get("products", [])],
-                conditions=ReactionConditions(),
-                confidence=0.96
-            )
 
         clean_smiles = prompt.strip()
         if re.match(r"^[A-Za-z0-9@+\-\[\]\(\)\\\/=#$%]+$", clean_smiles) and len(clean_smiles) <= 50:

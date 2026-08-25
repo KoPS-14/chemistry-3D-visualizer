@@ -9,12 +9,13 @@ import { ElementSearch } from './components/ElementSearch';
 import { ReactionAnimationViewer } from './components/ReactionAnimationViewer';
 import { ReactionTimelineControls } from './components/ReactionTimelineControls';
 import { ChemistryTutorChat } from './components/ChemistryTutorChat';
+import { ChemistryChatbotView } from './components/ChemistryChatbotView';
 import { calculateAnimationFrameState } from './three/animateReaction';
 import { visualizeChemistry, fetchAllElements, checkHealth } from './services/api';
 import type { MoleculeData, ReactionData, VisualizeResponse, ElementData } from './types/reaction';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'elements' | 'molecules'>('elements');
+  const [activeTab, setActiveTab] = useState<'elements' | 'molecules' | 'chat'>('elements');
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
   // Periodic Table Elements state
@@ -145,7 +146,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-white relative overflow-x-hidden">
-      {/* AI Chemistry Tutor Drawer Component */}
+      {/* AI Chemistry Tutor Quick Drawer Component */}
       <ChemistryTutorChat
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
@@ -196,6 +197,17 @@ export const App: React.FC = () => {
             >
               Molecules & Reactions
             </button>
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'chat'
+                  ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-lg shadow-cyan-600/40 border border-cyan-400/40'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+              }`}
+            >
+              <span>💬</span>
+              <span>AI Chemistry Chat</span>
+            </button>
           </div>
 
           <button
@@ -203,7 +215,7 @@ export const App: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 text-cyan-300 border border-cyan-500/50 hover:border-cyan-400 hover:text-white transition-all cursor-pointer shadow-xl shadow-cyan-950/60"
           >
             <span className="text-sm">🤖</span>
-            <span>AI Tutor</span>
+            <span>Quick Tutor</span>
           </button>
         </div>
 
@@ -332,6 +344,15 @@ export const App: React.FC = () => {
               </div>
             </div>
           </>
+        )}
+
+        {/* ========================================================= */}
+        {/* MODE 3: FULL CHATGPT-STYLE AI CHEMISTRY CHATBOT           */}
+        {/* ========================================================= */}
+        {activeTab === 'chat' && (
+          <section className="w-full">
+            <ChemistryChatbotView />
+          </section>
         )}
       </main>
     </div>

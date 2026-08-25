@@ -108,7 +108,7 @@ class VisualizeResponse(BaseModel):
 
 
 class ChatMessage(BaseModel):
-    role: str = Field(..., description="'user' or 'assistant'")
+    role: str = Field(..., description="'user', 'assistant', 'model', or 'system'")
     content: str
 
 
@@ -119,7 +119,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     status: str = Field(..., description="'success' or 'error'")
+    answer: str
     reply: str
-    key_concepts: Optional[List[str]] = Field(default_factory=list)
     suggested_visualize_prompt: Optional[str] = None
-    suggested_followups: Optional[List[str]] = Field(default_factory=list)
+    error: Optional[str] = None
