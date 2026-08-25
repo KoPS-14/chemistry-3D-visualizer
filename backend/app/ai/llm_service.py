@@ -73,13 +73,13 @@ class LLMService:
             missing_key_guidance = (
                 "### 🔑 Gemini API Key Configuration Required\n\n"
                 "To enable dynamic AI Chemistry Chatbot responses powered by Google Gemini:\n\n"
-                "1. **Get a free API key** from [Google AI Studio](https://aistudio.google.com/).\n"
+                "1. **Get a free API key** from [Google AI Studio](https://aistudio.google.com/app/apikey).\n"
                 "2. **Open your backend environment file**: `backend/.env`.\n"
-                "3. **Add your Gemini API key**:\n"
+                "3. **Add your Gemini API key** (starts with `AIzaSy...`):\n"
                 "   ```text\n"
-                "   GEMINI_API_KEY=your_actual_gemini_api_key_here\n"
+                "   GEMINI_API_KEY=AIzaSyYourActualKeyHere\n"
                 "   ```\n"
-                "4. **Save the file** and submit your question again. The chatbot will dynamically generate detailed, step-by-step chemistry explanations for any topic!"
+                "4. **Save the file** and submit your question again. The chatbot will dynamically generate detailed chemistry explanations for any topic!"
             )
             return ChatResponse(
                 status="error",
@@ -98,9 +98,23 @@ class LLMService:
     @staticmethod
     def _call_gemini_chat(message: str, history: List[ChatMessage], api_key: str) -> ChatResponse:
         """Calls Google Gemini GenerateContent REST API with system instructions and multi-turn history."""
+        # Check key format warning
+        if not api_key.startswith("AIzaSy"):
+            key_format_hint = (
+                "### ⚠️ Gemini API Key Format Notice\n\n"
+                f"Your API key currently starts with `{api_key[:6]}...`. Google AI Studio Gemini API keys always start with **`AIzaSy...`** (39 characters).\n\n"
+                "#### 🔑 How to get your free Google AI Studio key:\n"
+                "1. Open [**https://aistudio.google.com/app/apikey**](https://aistudio.google.com/app/apikey) in your browser.\n"
+                "2. Click **'Create API key'** (free, no billing required).\n"
+                "3. Copy the key starting with `AIzaSy...`.\n"
+                "4. Open `backend/.env` and set `GEMINI_API_KEY=AIzaSy...`.\n"
+                "5. Save the file and your questions will be dynamically answered by Gemini!"
+            )
+            logger.warning("GEMINI_API_KEY does not start with AIzaSy. It might be invalid for Google AI Studio.")
+
         # Construct Gemini multi-turn contents
         contents = []
-        for msg in history[-12:]:  # Pass last 12 messages for rich conversational context
+        for msg in history[-12:]:
             role = "user" if msg.role in ("user", "human") else "model"
             contents.append({
                 "role": role,
@@ -128,7 +142,6 @@ class LLMService:
             if m not in models_to_try:
                 models_to_try.append(m)
 
-        last_error = ""
         for model_name in models_to_try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
             try:
@@ -148,33 +161,33 @@ class LLMService:
                                     reply=generated_text
                                 )
                     elif response.status_code == 429:
-                        last_error = "⚠️ Gemini API rate limit or quota exceeded. Please check your Google AI Studio quota or try again in a few moments."
-                        continue
-                    elif response.status_code in (401, 403):
-                        return ChatResponse(
-                            status="error",
-                            answer=f"⚠️ Gemini API Authentication Error ({response.status_code}). Please verify your `GEMINI_API_KEY` in `backend/.env` is valid from Google AI Studio.",
-                            reply=f"⚠️ Gemini API Authentication Error ({response.status_code}).",
-                            error=f"Auth error {response.status_code}"
+                        quota_msg = (
+                            "### ⚠️ Gemini API Rate Limit / Quota Exceeded (429)\n\n"
+                            "Your Gemini API key has exceeded its current request quota. "
+                            "Please wait a few moments before sending your next request, or create a new free API key at [Google AI Studio](https://aistudio.google.com/app/apikey)."
                         )
-                    elif response.status_code == 404:
-                        # Model name not found on this API tier, try next model
+                        return ChatResponse(status="error", answer=quota_msg, reply=quota_msg, error="Rate limit (429)")
+                    elif response.status_code in (400, 401, 403, 404):
                         continue
-                    else:
-                        last_error = f"Gemini API returned status {response.status_code}"
-            except httpx.TimeoutException:
-                last_error = "Request to Gemini API timed out"
-                continue
-            except Exception as e:
-                last_error = str(e)
+            except Exception:
                 continue
 
-        return ChatResponse(
-            status="error",
-            answer=last_error or "⚠️ Unable to generate response from Gemini API. Please check your API key and connection.",
-            reply=last_error or "⚠️ Unable to generate response from Gemini API.",
-            error=last_error
+        # If all API calls failed, give actionable guidance
+        guidance = (
+            "### ⚠️ Google Gemini API Key Setup\n\n"
+            "The Google Gemini API returned `404 / 400` with the current key.\n\n"
+            "Google AI Studio keys start with **`AIzaSy...`** (e.g. `AIzaSyD-12345...`).\n\n"
+            "#### 🔑 To fix this in 30 seconds:\n"
+            "1. Visit [**https://aistudio.google.com/app/apikey**](https://aistudio.google.com/app/apikey)\n"
+            "2. Click **'Create API key'**\n"
+            "3. Copy the key starting with **`AIzaSy`**\n"
+            "4. Open `backend/.env` and update:\n"
+            "   ```text\n"
+            "   GEMINI_API_KEY=AIzaSyYourActualKeyHere\n"
+            "   ```\n"
+            "5. Save the file and ask any question!"
         )
+        return ChatResponse(status="error", answer=guidance, reply=guidance, error="Invalid API key or model")
 
     @staticmethod
     def _call_openai_chat(message: str, history: List[ChatMessage], api_key: str) -> ChatResponse:
