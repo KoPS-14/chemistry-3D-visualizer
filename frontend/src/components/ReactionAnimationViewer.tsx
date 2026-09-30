@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -13,7 +13,7 @@ interface ReactionAnimationViewerProps {
   wireframe?: boolean;
 }
 
-// 3D Curved Arc for Electron Pair Transfer Mechanism (Curved Arrow Flow)
+// 3D Curved Arc for Electron Pair Transfer Mechanism
 const ElectronFlowArc: React.FC<{ arc: ElectronFlowArcState }> = ({ arc }) => {
   const curve = useMemo(() => {
     return new THREE.QuadraticBezierCurve3(
@@ -33,7 +33,6 @@ const ElectronFlowArc: React.FC<{ arc: ElectronFlowArcState }> = ({ arc }) => {
 
   return (
     <group>
-      {/* Glowing Curved Arc Tube */}
       <mesh geometry={tubeGeometry}>
         <meshStandardMaterial
           color="#38bdf8"
@@ -44,7 +43,6 @@ const ElectronFlowArc: React.FC<{ arc: ElectronFlowArcState }> = ({ arc }) => {
         />
       </mesh>
 
-      {/* Traveling Electron Pair Spheres (e⁻ pair) */}
       <group position={[ePos.x, ePos.y, ePos.z]}>
         <mesh position={[-0.07, 0, 0]}>
           <sphereGeometry args={[0.08, 16, 16]} />
@@ -64,16 +62,36 @@ const AnimatedReactionScene: React.FC<{
   progress: number;
   wireframe?: boolean;
   controlsRef: React.RefObject<OrbitControlsImpl | null>;
-}> = ({ reaction, progress, wireframe = false, controlsRef }) => {
+  cameraTarget: [number, number, number];
+  cameraDistance: number;
+  dragMode: 'rotate' | 'pan';
+  onSelectTarget: (target: [number, number, number], distance: number) => void;
+}> = ({ reaction, progress, wireframe = false, controlsRef, cameraTarget, cameraDistance, dragMode, onSelectTarget }) => {
   const animState = useMemo(() => calculateAnimationFrameState(reaction, progress), [reaction, progress]);
 
+  // Smoothly update OrbitControls target & mouse mode
   useEffect(() => {
     if (controlsRef.current) {
-      controlsRef.current.target.set(0, 0, 0);
-      controlsRef.current.object.position.set(0, 0, 16);
+      controlsRef.current.target.set(cameraTarget[0], cameraTarget[1], cameraTarget[2]);
+      controlsRef.current.object.position.set(cameraTarget[0], cameraTarget[1] + 0.5, cameraTarget[2] + cameraDistance);
+      
+      // Configure mouse buttons according to active dragMode
+      if (dragMode === 'pan') {
+        controlsRef.current.mouseButtons = {
+          LEFT: THREE.MOUSE.PAN,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.ROTATE,
+        };
+      } else {
+        controlsRef.current.mouseButtons = {
+          LEFT: THREE.MOUSE.ROTATE,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.PAN,
+        };
+      }
       controlsRef.current.update();
     }
-  }, [reaction, controlsRef]);
+  }, [cameraTarget, cameraDistance, dragMode, controlsRef]);
 
   return (
     <>
@@ -82,7 +100,7 @@ const AnimatedReactionScene: React.FC<{
       <directionalLight position={[-10, -10, -10]} intensity={0.5} />
       <pointLight position={[0, 0, 0]} intensity={0.8} color="#38bdf8" />
 
-      {/* 3D Transition State Activated Complex Glow Ring (Completely unobstructive, no hovering cards!) */}
+      {/* 3D Transition State Activated Complex Glow Ring */}
       {animState.isTransitionStateActive && (
         <group position={[0, 0, 0]}>
           <mesh rotation={[Math.PI / 2, 0, 0]}>
@@ -90,7 +108,6 @@ const AnimatedReactionScene: React.FC<{
             <meshBasicMaterial color="#f59e0b" opacity={0.65} transparent side={THREE.DoubleSide} />
           </mesh>
 
-          {/* Partial Charge Badges (δ⁻) on Nucleophile & Leaving Group */}
           <Html position={[-1.6, 1.0, 0]} center distanceFactor={14}>
             <span className="text-xs font-mono font-bold text-cyan-300 bg-slate-900/90 px-1.5 py-0.5 rounded border border-cyan-500/50 shadow pointer-events-none select-none">
               δ⁻
@@ -107,7 +124,7 @@ const AnimatedReactionScene: React.FC<{
       {/* Curved Electron Arc Mechanism */}
       {animState.electronArc && <ElectronFlowArc arc={animState.electronArc} />}
 
-      {/* Render Equation Symbols (+ and -> Arrow) Inline with Bottom Formula Label Row */}
+      {/* Render Equation Symbols (+ and -> Arrow) */}
       {animState.reactionSymbols.map((sym) => {
         if (sym.opacity < 0.05) return null;
 
@@ -147,7 +164,7 @@ const AnimatedReactionScene: React.FC<{
         return null;
       })}
 
-      {/* Render Clean Textbook Molecule Labels Below Each Molecule */}
+      {/* Render Clickable Molecule Labels Below Each Molecule */}
       {animState.moleculeLabels.map((lbl) => {
         if (lbl.opacity < 0.05) return null;
         const isReactant = lbl.role === 'reactant';
@@ -155,13 +172,16 @@ const AnimatedReactionScene: React.FC<{
         return (
           <Html key={lbl.id} position={lbl.position} center distanceFactor={14}>
             <div
-              className={`flex flex-col items-center px-3 py-1.5 rounded-lg border backdrop-blur-md shadow-2xl transition-all pointer-events-none select-none ${
+              onClick={() => onSelectTarget([lbl.position[0], 0, 0], 6.5)}
+              className={`flex flex-col items-center px-3 py-1.5 rounded-xl border backdrop-blur-md shadow-2xl transition-all cursor-pointer hover:scale-105 active:scale-95 ${
                 isReactant
-                  ? 'bg-slate-900/95 border-cyan-500/70 text-cyan-300'
-                  : 'bg-slate-900/95 border-emerald-500/70 text-emerald-300'
+                  ? 'bg-slate-900/95 border-cyan-500/80 text-cyan-300 hover:border-cyan-400 hover:shadow-cyan-500/30'
+                  : 'bg-slate-900/95 border-emerald-500/80 text-emerald-300 hover:border-emerald-400 hover:shadow-emerald-500/30'
               }`}
               style={{ opacity: lbl.opacity }}
+              title={`Click to focus camera directly on ${lbl.name}`}
             >
+              <span className="text-xs font-mono text-slate-400 uppercase font-medium">Click to Focus 🎯</span>
               <span className="text-sm font-bold font-mono tracking-wider">{lbl.formula}</span>
               <span className="text-[11px] font-semibold text-slate-200 truncate max-w-[130px] text-center mt-0.5">
                 {lbl.name}
@@ -181,6 +201,10 @@ const AnimatedReactionScene: React.FC<{
             key={bond.id}
             position={bond.midpoint}
             quaternion={bond.quaternion}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectTarget([bond.midpoint[0], bond.midpoint[1], bond.midpoint[2]], 5.0);
+            }}
           >
             <cylinderGeometry args={[radius, radius, bond.length, 16]} />
             <meshStandardMaterial
@@ -202,7 +226,14 @@ const AnimatedReactionScene: React.FC<{
         const radius = cfg.radius * item.scale;
 
         return (
-          <mesh key={`r-atom-${idx}`} position={item.position}>
+          <mesh
+            key={`r-atom-${idx}`}
+            position={item.position}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectTarget([item.position[0], item.position[1], item.position[2]], 4.5);
+            }}
+          >
             <sphereGeometry args={[radius, 32, 32]} />
             <meshStandardMaterial
               color={cfg.color}
@@ -223,7 +254,14 @@ const AnimatedReactionScene: React.FC<{
         const radius = cfg.radius * item.scale;
 
         return (
-          <mesh key={`p-atom-${idx}`} position={item.position}>
+          <mesh
+            key={`p-atom-${idx}`}
+            position={item.position}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectTarget([item.position[0], item.position[1], item.position[2]], 4.5);
+            }}
+          >
             <sphereGeometry args={[radius, 32, 32]} />
             <meshStandardMaterial
               color={cfg.color}
@@ -243,8 +281,12 @@ const AnimatedReactionScene: React.FC<{
         enableDamping
         dampingFactor={0.08}
         rotateSpeed={0.8}
-        zoomSpeed={1.0}
-        panSpeed={0.8}
+        zoomSpeed={1.5}
+        panSpeed={1.0}
+        screenSpacePanning
+        zoomToCursor
+        minDistance={0.2}
+        maxDistance={150.0}
       />
     </>
   );
@@ -258,20 +300,193 @@ export const ReactionAnimationViewer: React.FC<ReactionAnimationViewerProps> = (
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const animState = useMemo(() => calculateAnimationFrameState(reaction, progress), [reaction, progress]);
 
-  const handleResetCamera = () => {
-    if (controlsRef.current) {
-      controlsRef.current.target.set(0, 0, 0);
-      controlsRef.current.object.position.set(0, 0, 16);
-      controlsRef.current.update();
-    }
+  // Camera Target, Distance, and Drag Mode state
+  const [cameraTarget, setCameraTarget] = useState<[number, number, number]>([0, 0, 0]);
+  const [cameraDistance, setCameraDistance] = useState<number>(16.0);
+  const [activeTargetLabel, setActiveTargetLabel] = useState<string>('Overview');
+  const [dragMode, setDragMode] = useState<'rotate' | 'pan'>('rotate');
+
+  const handleSelectTarget = (target: [number, number, number], distance: number, labelName?: string) => {
+    setCameraTarget(target);
+    setCameraDistance(distance);
+    if (labelName) setActiveTargetLabel(labelName);
   };
+
+  const handleResetCamera = () => {
+    setCameraTarget([0, 0, 0]);
+    setCameraDistance(16.0);
+    setActiveTargetLabel('Overview');
+    setDragMode('rotate');
+  };
+
+  const handleZoomIn = () => {
+    setCameraDistance((prev) => Math.max(1.5, prev * 0.7));
+  };
+
+  const handleZoomOut = () => {
+    setCameraDistance((prev) => Math.min(80.0, prev * 1.4));
+  };
+
+  const handlePanShift = (dx: number, dy: number) => {
+    setCameraTarget(([cx, cy, cz]) => [cx + dx, cy + dy, cz]);
+  };
+
+  // Extract Reactants & Products for Quick Focus Buttons
+  const r1 = reaction.reactants[0];
+  const r2 = reaction.reactants[1];
+  const p1 = reaction.products[0];
 
   return (
     <div className="relative w-full h-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
-      {/* Sleek Floating Top HUD Banner for Transition State Explanations (Outside 3D Viewport!) */}
+      {/* Top Left HUD: Zoom & Focus Preset Buttons */}
+      <div className="absolute top-3 left-3 z-20 flex flex-wrap items-center gap-1.5 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-xl border border-slate-800 shadow-2xl">
+        <span className="text-[10px] font-mono text-slate-400 font-bold px-1.5 uppercase">Focus Target:</span>
+        <button
+          onClick={() => handleSelectTarget([0, 0, 0], 16.0, 'Overview')}
+          className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition cursor-pointer ${
+            activeTargetLabel === 'Overview'
+              ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/40 border border-cyan-400/40'
+              : 'bg-slate-950 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-800'
+          }`}
+        >
+          🔍 Overview (All)
+        </button>
+
+        {r1 && (
+          <button
+            onClick={() => {
+              const posX = animState.moleculeLabels[0]?.position[0] ?? -4.5;
+              handleSelectTarget([posX, 0, 0], 6.5, r1.name);
+            }}
+            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition cursor-pointer ${
+              activeTargetLabel === r1.name
+                ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/40 border border-cyan-400/40'
+                : 'bg-slate-950 text-cyan-300 hover:bg-slate-800 hover:text-white border border-cyan-800/60'
+            }`}
+            title={`Focus camera on Reactant 1: ${r1.name}`}
+          >
+            🧪 {r1.name}
+          </button>
+        )}
+
+        {r2 && (
+          <button
+            onClick={() => {
+              const posX = animState.moleculeLabels[1]?.position[0] ?? 0;
+              handleSelectTarget([posX, 0, 0], 6.5, r2.name);
+            }}
+            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition cursor-pointer ${
+              activeTargetLabel === r2.name
+                ? 'bg-amber-600 text-white shadow-md shadow-amber-600/40 border border-amber-400/40'
+                : 'bg-slate-950 text-amber-300 hover:bg-slate-800 hover:text-white border border-amber-800/60'
+            }`}
+            title={`Focus camera on Reactant 2: ${r2.name}`}
+          >
+            🧪 {r2.name}
+          </button>
+        )}
+
+        {p1 && (
+          <button
+            onClick={() => {
+              const lastIdx = animState.moleculeLabels.length - 1;
+              const posX = animState.moleculeLabels[lastIdx]?.position[0] ?? 5.5;
+              handleSelectTarget([posX, 0, 0], 6.5, p1.name);
+            }}
+            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition cursor-pointer ${
+              activeTargetLabel === p1.name
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/40 border border-emerald-400/40'
+                : 'bg-slate-950 text-emerald-300 hover:bg-slate-800 hover:text-white border border-emerald-800/60'
+            }`}
+            title={`Focus camera on Product: ${p1.name}`}
+          >
+            ✨ {p1.name}
+          </button>
+        )}
+      </div>
+
+      {/* Top Right Navigation Controls: Drag-Pan Mode Toggle, Zoom In/Out, Directional Shift, Reset */}
+      <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
+        <div className="flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-xl border border-slate-800 shadow-2xl font-mono text-xs">
+          {/* Drag Mode Switcher */}
+          <button
+            onClick={() => setDragMode((prev) => (prev === 'rotate' ? 'pan' : 'rotate'))}
+            className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer flex items-center gap-1 ${
+              dragMode === 'pan'
+                ? 'bg-emerald-600 text-white border border-emerald-400 shadow-md shadow-emerald-600/40 animate-pulse'
+                : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
+            }`}
+            title={dragMode === 'pan' ? 'Left click drag moves camera view anywhere!' : 'Click to enable Drag-to-Move Pan Mode'}
+          >
+            {dragMode === 'pan' ? '🖐️ Move View Active' : '🔄 Drag Mode: Orbit'}
+          </button>
+
+          {/* Zoom In (+) */}
+          <button
+            onClick={handleZoomIn}
+            className="w-7 h-7 bg-slate-950 hover:bg-slate-800 text-white font-bold rounded-lg border border-slate-800 transition flex items-center justify-center cursor-pointer text-sm shadow"
+            title="Zoom In Camera (+)"
+          >
+            +
+          </button>
+
+          {/* Zoom Out (-) */}
+          <button
+            onClick={handleZoomOut}
+            className="w-7 h-7 bg-slate-950 hover:bg-slate-800 text-white font-bold rounded-lg border border-slate-800 transition flex items-center justify-center cursor-pointer text-sm shadow"
+            title="Zoom Out Camera (-)"
+          >
+            −
+          </button>
+
+          {/* Reset Camera */}
+          <button
+            onClick={handleResetCamera}
+            className="px-2 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-800 text-xs font-mono transition cursor-pointer"
+            title="Reset Camera to Center"
+          >
+            ↺ Reset
+          </button>
+        </div>
+
+        {/* Directional Camera Shift D-Pad (Left, Right, Up, Down) */}
+        <div className="flex items-center gap-1 bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-800 shadow-xl">
+          <span className="text-[10px] font-mono text-slate-500 px-1">Pan View:</span>
+          <button
+            onClick={() => handlePanShift(-2.5, 0)}
+            className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-cyan-300 text-xs font-mono rounded border border-slate-800 cursor-pointer"
+            title="Shift camera view left"
+          >
+            ⬅️
+          </button>
+          <button
+            onClick={() => handlePanShift(2.5, 0)}
+            className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-cyan-300 text-xs font-mono rounded border border-slate-800 cursor-pointer"
+            title="Shift camera view right"
+          >
+            ➡️
+          </button>
+          <button
+            onClick={() => handlePanShift(0, 2.5)}
+            className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-cyan-300 text-xs font-mono rounded border border-slate-800 cursor-pointer"
+            title="Shift camera view up"
+          >
+            ⬆️
+          </button>
+          <button
+            onClick={() => handlePanShift(0, -2.5)}
+            className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-cyan-300 text-xs font-mono rounded border border-slate-800 cursor-pointer"
+            title="Shift camera view down"
+          >
+            ⬇️
+          </button>
+        </div>
+      </div>
+
+      {/* Floating Transition State Banner */}
       {animState.transitionAnnotation && (
         <div
-          className="absolute top-3 left-1/2 transform -translate-x-1/2 bg-slate-900/90 border border-amber-500/60 rounded-xl px-4 py-2 text-center shadow-2xl backdrop-blur-md z-20 pointer-events-none transition-opacity duration-300 max-w-lg w-11/12"
+          className="absolute top-14 left-1/2 transform -translate-x-1/2 bg-slate-900/90 border border-amber-500/60 rounded-xl px-4 py-2 text-center shadow-2xl backdrop-blur-md z-20 pointer-events-none transition-opacity duration-300 max-w-lg w-11/12"
           style={{ opacity: animState.transitionAnnotation.opacity }}
         >
           <div className="text-xs font-bold text-amber-300 font-mono flex items-center justify-center gap-1.5">
@@ -290,30 +505,23 @@ export const ReactionAnimationViewer: React.FC<ReactionAnimationViewerProps> = (
         </div>
       )}
 
-      <Canvas camera={{ position: [0, 0, 16], fov: 45 }} gl={{ antialias: true }}>
+      <Canvas camera={{ position: [0, 0, 16], fov: 45, near: 0.1, far: 1000 }} gl={{ antialias: true }}>
         <AnimatedReactionScene
           reaction={reaction}
           progress={progress}
           wireframe={wireframe}
           controlsRef={controlsRef}
+          cameraTarget={cameraTarget}
+          cameraDistance={cameraDistance}
+          dragMode={dragMode}
+          onSelectTarget={(tgt, dist) => handleSelectTarget(tgt, dist)}
         />
       </Canvas>
 
-      {/* Label: 3D Textbook Reaction Equation */}
-      <div className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded border border-slate-800 text-[11px] font-mono text-cyan-400 z-10">
-        Textbook Reaction Layout ({reaction.balanced_equation || reaction.reaction_type})
+      {/* Bottom Hint Banner */}
+      <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] font-mono text-cyan-400 z-10 flex items-center gap-2">
+        <span>💡 Hint: Use Focus buttons or 🖐️ Move View mode / ⬅️➡️ arrows to zoom into ANY molecule anywhere!</span>
       </div>
-
-      <button
-        onClick={handleResetCamera}
-        className="absolute top-4 right-4 bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-slate-700 backdrop-blur-sm transition flex items-center gap-1.5 shadow z-20 cursor-pointer"
-        title="Reset Camera View"
-      >
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        Reset Camera
-      </button>
     </div>
   );
 };

@@ -1,0 +1,28 @@
+{
+  "reaction_id": "contact_process_so2_oxidation",
+  "name": "Contact Process: Sulfur Dioxide Oxidation",
+  "reaction_type": "REDOX_CATALYTIC",
+  "description": "Reversible exothermic oxidation of sulfur dioxide to sulfur trioxide over a vanadium pentoxide (V2O5) catalyst at 450\u00b0C and 1-2 atm.",
+  "balanced_equation": "2 SO2 + O2 -> 2 SO3",
+  "reactants": [
+    {
+      "name": "Sulfur Dioxide",
+      "smiles": "O=S=O"
+    },
+    {
+      "name": "Oxygen Gas",
+      "smiles": "O=O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Sulfur Trioxide",
+      "smiles": "O=S(=O)=O"
+    }
+  ],
+  "stages": [
+    "1. Catalytic Oxygen Chemisorption",
+    "2. SO2 Oxidation Intermediate",
+    "3. Planar SO3 Desorption"
+  ]
+}

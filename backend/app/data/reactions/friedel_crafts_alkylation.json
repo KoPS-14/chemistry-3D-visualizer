@@ -1,0 +1,32 @@
+{
+  "reaction_id": "friedel_crafts_alkylation",
+  "name": "Friedel-Crafts Alkylation of Benzene",
+  "reaction_type": "ELECTROPHILIC_AROMATIC",
+  "description": "Electrophilic aromatic substitution where a carbocation/Lewis acid complex attacks the aromatic pi-cloud forming a Wheland sigma-complex intermediate followed by deprotonation to yield toluene and HCl.",
+  "balanced_equation": "C6H6 + CH3Cl -> C6H5CH3 + HCl",
+  "reactants": [
+    {
+      "name": "Benzene",
+      "smiles": "c1ccccc1"
+    },
+    {
+      "name": "Chloromethane",
+      "smiles": "CCl"
+    }
+  ],
+  "products": [
+    {
+      "name": "Toluene",
+      "smiles": "Cc1ccccc1"
+    },
+    {
+      "name": "Hydrogen Chloride",
+      "smiles": "Cl"
+    }
+  ],
+  "stages": [
+    "1. Electrophilic Attack on Aromatic Ring",
+    "2. Arenium Ion (Sigma Complex) Intermediate",
+    "3. Rearomatization & Proton Transfer"
+  ]
+}

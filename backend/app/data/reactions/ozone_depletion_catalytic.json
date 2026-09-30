@@ -1,0 +1,28 @@
+{
+  "reaction_id": "ozone_depletion_catalytic",
+  "name": "Catalytic Ozone Depletion",
+  "reaction_type": "REDOX_CATALYTIC",
+  "description": "Homolytic reaction between ozone and atomic oxygen radicals producing two stable diatomic oxygen molecules.",
+  "balanced_equation": "O3 + O -> 2 O2",
+  "reactants": [
+    {
+      "name": "Ozone",
+      "smiles": "[O-][O+]=O"
+    },
+    {
+      "name": "Atomic Oxygen Radical",
+      "smiles": "[O]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Dioxygen Gas",
+      "smiles": "O=O"
+    }
+  ],
+  "stages": [
+    "1. Radical-Ozone Collision Complex",
+    "2. O-O Bond Cleavage Transition State",
+    "3. Formation of 2 Ground-State O2 Molecules"
+  ]
+}

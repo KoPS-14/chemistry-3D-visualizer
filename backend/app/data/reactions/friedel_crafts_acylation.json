@@ -1,0 +1,32 @@
+{
+  "reaction_id": "friedel_crafts_acylation",
+  "name": "Friedel-Crafts Acylation of Benzene",
+  "reaction_type": "ELECTROPHILIC_AROMATIC",
+  "description": "Electrophilic aromatic substitution of benzene with acetyl chloride in the presence of an AlCl3 catalyst forming resonance-stabilized acylium ion and yielding acetophenone.",
+  "balanced_equation": "C6H6 + CH3COCl -> C6H5COCH3 + HCl",
+  "reactants": [
+    {
+      "name": "Benzene",
+      "smiles": "c1ccccc1"
+    },
+    {
+      "name": "Acetyl Chloride",
+      "smiles": "CC(=O)Cl"
+    }
+  ],
+  "products": [
+    {
+      "name": "Acetophenone",
+      "smiles": "CC(=O)c1ccccc1"
+    },
+    {
+      "name": "Hydrogen Chloride",
+      "smiles": "Cl"
+    }
+  ],
+  "stages": [
+    "1. Acylium Ion Formation & Pi-Attack",
+    "2. Wheland Intermediate Sigma Complex",
+    "3. Rearomatization to Acetophenone"
+  ]
+}

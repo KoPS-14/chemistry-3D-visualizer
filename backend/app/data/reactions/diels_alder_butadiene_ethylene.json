@@ -1,0 +1,28 @@
+{
+  "reaction_id": "diels_alder_butadiene_ethylene",
+  "name": "Diels-Alder Cycloaddition of Butadiene and Ethylene",
+  "reaction_type": "CYCLOADDITION",
+  "description": "Pericyclic [4+2] cycloaddition between a conjugated diene (1,3-butadiene) and a dienophile (ethylene) forming a stable cyclohexene ring through a concerted aromatic 6-electron transition state.",
+  "balanced_equation": "C4H6 + C2H4 -> C6H10",
+  "reactants": [
+    {
+      "name": "1,3-Butadiene",
+      "smiles": "C=CC=C"
+    },
+    {
+      "name": "Ethylene",
+      "smiles": "C=C"
+    }
+  ],
+  "products": [
+    {
+      "name": "Cyclohexene",
+      "smiles": "C1=CCCCC1"
+    }
+  ],
+  "stages": [
+    "1. Suprafacial Approach of Diene and Dienophile",
+    "2. Concerted 6-Electron Cyclic Transition State",
+    "3. Cyclohexene Ring Closure"
+  ]
+}

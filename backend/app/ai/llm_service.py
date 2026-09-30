@@ -7,6 +7,7 @@ import httpx
 
 from app.core.config import settings
 from app.schemas.models import ChatMessage, ChatResponse, LLMStructuredOutput, ReactantOrProduct, ReactionConditions
+from app.chemistry.context_service import ContextEnrichmentService
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +86,66 @@ def clean_latex_artifacts(text: str) -> str:
 
     cleaned = re.sub(r"\$\$([^$]+)\$\$", replace_block_math, cleaned)
 
-    return cleaned.strip()
+    return sanitize_chat_output(cleaned.strip())
+
+
+def sanitize_chat_output(text: str) -> str:
+    """Stops hallucinated multi-turn roleplay loops, Cyrillic delimiters, and token leakage."""
+    if not text:
+        return text
+
+    # Cut off at any hallucinated role turn patterns
+    cutoff_patterns = [
+        r"(?:basket|asket|spep|cushion|łazienk)",
+        r"[\u4e00-\u9fff]",
+        r"NdrFc",
+        r"SOEVER",
+        r"комф",
+        r"vinfos",
+        r"<\|im_start\|>",
+        r"<\|im_end\|>",
+        r"\n\s*(?:user|User|assistant|Assistant)\s*[:\n]",
+        r"User:\s*",
+        r"Assistant:\s*",
+        r"You are a chemistry structure translator",
+        r"You are an image structure translator",
+    ]
+    for pattern in cutoff_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            text = text[:match.start()].strip()
+
+    # Deduplicate repeating consecutive sentences/paragraphs
+    lines = text.split("\n")
+    cleaned_lines = []
+    seen = set()
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        # Check for sentence repetitions within the line
+        sentences = re.split(r"(?<=[.!?])\s+", stripped)
+        seen_sents = set()
+        clean_sents = []
+        for s in sentences:
+            s_clean = s.strip().lower()
+            if len(s_clean) > 15:
+                if s_clean in seen_sents:
+                    break
+                seen_sents.add(s_clean)
+            clean_sents.append(s)
+        
+        line_clean = " ".join(clean_sents).strip()
+        if line_clean and line_clean in seen and len(line_clean) > 20:
+            continue
+        if line_clean:
+            seen.add(line_clean)
+            cleaned_lines.append(line_clean)
+
+    result = "\n".join(cleaned_lines).strip()
+    result = re.sub(r"[^\w\s.,;:!?()\[\]{}+/=\\-–—°'\"²³⁴⁰¹₂₃₄₅₆₇₈₉\u0370-\u03ff\u2190-\u21ff]+$", "", result).strip()
+    return result
+
 
 
 class LLMService:
@@ -104,8 +164,9 @@ class LLMService:
                 error="Empty message"
             )
 
+        provider = settings.LLM_PROVIDER.lower()
         api_key = settings.active_api_key
-        if not api_key:
+        if not api_key and provider != "ollama":
             missing_key_guidance = (
                 "### 🔑 Gemini API Key Configuration Required\n\n"
                 "To enable dynamic AI Chemistry Chatbot responses powered by Google Gemini:\n\n"
@@ -124,11 +185,118 @@ class LLMService:
                 error="GEMINI_API_KEY is not configured in backend/.env"
             )
 
-        provider = settings.LLM_PROVIDER.lower()
-        if "gemini" in provider or settings.GEMINI_API_KEY:
+        if provider == "ollama":
+            return LLMService._call_ollama_chat(clean_msg, history or [])
+        elif "gemini" in provider or settings.GEMINI_API_KEY:
             return LLMService._call_gemini_chat(clean_msg, history or [], api_key)
         else:
             return LLMService._call_openai_chat(clean_msg, history or [], api_key)
+
+    @staticmethod
+    def explain_element(
+        name: str,
+        symbol: str,
+        atomic_number: int,
+        group: Optional[int] = None,
+        period: Optional[int] = None,
+        category: str = "unknown",
+        electron_configuration: str = "",
+        atomic_mass: Optional[float] = None,
+        summary: str = ""
+    ) -> str:
+        """Generates an educational AI explanation of a periodic table element via Gemini."""
+        prompt = (
+            f"Explain the chemical element '{name}' (Symbol: {symbol}, Atomic Number: {atomic_number}, "
+            f"Group: {group or 'N/A'}, Period: {period or 'N/A'}, Category: {category}, "
+            f"Electron Config: {electron_configuration or 'N/A'}, Mass: {atomic_mass or 'N/A'} u).\n"
+            f"Summary context: {summary}\n\n"
+            f"Provide a clear, engaging, and scientifically accurate breakdown with these markdown sections:\n"
+            f"### ⚛️ Atomic & Electron Structure\n"
+            f"### 🧪 Reactivity & Periodic Trends\n"
+            f"### 🌍 Real-World & Industrial Uses\n"
+            f"### 💡 Key Chemical Insight"
+        )
+        api_key = settings.active_api_key
+        if api_key:
+            res = LLMService.ask_chemistry_tutor(prompt)
+            if res.status == "success" and res.answer and "GEMINI_API_KEY" not in res.answer:
+                return res.answer
+
+        return clean_latex_artifacts(
+            f"### ⚛️ Atomic & Electron Structure of {name} ({symbol})\n"
+            f"- **Atomic Number**: {atomic_number} ({atomic_number} protons, {atomic_number} electrons)\n"
+            f"- **Electron Configuration**: `{electron_configuration or 'N/A'}`\n"
+            f"- **Position**: Group {group or 'N/A'}, Period {period or 'N/A'} ({category.capitalize()})\n\n"
+            f"### 🧪 Reactivity & Periodic Trends\n"
+            f"{name} ({symbol}) is located in Group {group or 'N/A'}, Period {period or 'N/A'}. Its valence electron layout dictates its bond formation, ionization energy, and chemical reactivity.\n\n"
+            f"### 🌍 Real-World & Industrial Uses\n"
+            f"{summary or f'{name} plays an indispensable role in chemical technology, physical materials, and research.'}\n\n"
+            f"### 💡 Key Chemical Insight\n"
+            f"The electronic structure of {name} governs its reactivity and chemical bonding properties."
+        )
+
+    @staticmethod
+    def explain_reaction(
+        name: str,
+        reaction_type: str,
+        balanced_equation: Optional[str] = None,
+        conditions: Optional[dict] = None,
+        kinetics: Optional[dict] = None,
+        is_interrupted: bool = False
+    ) -> str:
+        """Generates an educational AI explanation of a chemical reaction and condition modifications/interruptions."""
+        conds = conditions or {}
+        kin = kinetics or {}
+        temp_c = conds.get("temperature_c", 25.0)
+        press_atm = conds.get("pressure_atm", 1.0)
+        catalyst = conds.get("catalyst", "none")
+        solvent = conds.get("solvent", "aqueous")
+        conc = conds.get("concentration", "1.0 M")
+        rel_rate = kin.get("relative_rate_multiplier", 1.0)
+        eff_ea = kin.get("effective_activation_energy_kj", 70.0)
+
+        interrupted_msg = "⚠️ ATTENTION: Reaction parameters were INTERRUPTED/MODIFIED by user!" if is_interrupted else "Standard reaction state."
+
+        prompt = (
+            f"Explain the chemical reaction '{name}' (Type: {reaction_type}, Balanced Equation: {balanced_equation or 'N/A'}).\n"
+            f"Status: {interrupted_msg}\n"
+            f"- Temperature: {temp_c}°C\n"
+            f"- Pressure: {press_atm} atm\n"
+            f"- Catalyst: {catalyst}\n"
+            f"- Solvent: {solvent}\n"
+            f"- Concentration: {conc}\n"
+            f"- Relative Rate k: {rel_rate}x\n"
+            f"- Effective Activation Energy Ea: {eff_ea} kJ/mol\n\n"
+            f"Provide a clear, engaging breakdown with these markdown headers:\n"
+            f"### ⚗️ Reaction Overview & Mechanism\n"
+            f"### ⚡ Energetics & Activation Energy (Ea)\n"
+            f"### 🎛️ Condition Impact & Interruption Effects\n"
+            f"### 🏭 Industrial & Practical Applications"
+        )
+        api_key = settings.active_api_key
+        if api_key:
+            res = LLMService.ask_chemistry_tutor(prompt)
+            if res.status == "success" and res.answer and "GEMINI_API_KEY" not in res.answer:
+                return res.answer
+
+        cat_note = f"With catalyst **{catalyst}**, activation energy Ea is lowered to {eff_ea} kJ/mol!" if catalyst and catalyst != "none" else "No catalyst active; reaction faces full standard thermal activation barrier."
+        temp_note = f"Operating at {temp_c}°C ({temp_c + 273.15:.1f} K) scales molecular kinetic energy, producing a relative rate factor of **{rel_rate}x**."
+
+        return clean_latex_artifacts(
+            f"### ⚗️ Reaction Overview: {name}\n"
+            f"- **Type**: `{reaction_type}`\n"
+            f"- **Equation**: `{balanced_equation or 'Reactants → Products'}`\n\n"
+            f"### ⚡ Energetics & Activation Energy (Ea)\n"
+            f"- **Effective Activation Energy (Ea)**: {eff_ea} kJ/mol\n"
+            f"- **Relative Rate (k)**: {rel_rate}x relative to 25°C standard state.\n"
+            f"{cat_note}\n\n"
+            f"### 🎛️ Condition Impact & Interruption Analysis\n"
+            f"{'⚠️ **Reaction Interrupted**: Custom temperature or catalyst altered activation energy and kinetic velocity.' if is_interrupted else 'Reaction running under configured parameters.'}\n"
+            f"{temp_note} In solvent medium `{solvent}` at `{press_atm} atm`, molecular collision frequency dictates the reaction progress.\n\n"
+            f"### 🏭 Industrial & Practical Applications\n"
+            f"Controlling temperature, pressure, and catalyst interruption allows chemists to optimize reaction speed and product purity."
+        )
+
 
     @staticmethod
     def _call_gemini_chat(message: str, history: List[ChatMessage], api_key: str) -> ChatResponse:
@@ -197,6 +365,84 @@ class LLMService:
         )
 
     @staticmethod
+    def _call_ollama_chat(message: str, history: List[ChatMessage]) -> ChatResponse:
+        url = "http://localhost:11434/api/chat"
+        ollama_system = (
+            "You are an expert, concise AI Chemistry Tutor and STEM assistant. "
+            "Provide a direct, scientifically accurate answer in 2 to 3 clear sentences. "
+            "Include key chemical facts, formulas (using Unicode like H₂O, CH₄), hybridization, and geometry where relevant. "
+            "Never generate conversational roleplay, fake user prompts, or repeating text."
+        )
+        messages_payload = [{"role": "system", "content": ollama_system}]
+
+        # Context-Enriched Prompting: Inject verified domain facts from local datasets
+        enriched_context = ContextEnrichmentService.get_enriched_context(message)
+        if enriched_context:
+            messages_payload.append({
+                "role": "system",
+                "content": f"Verified Knowledge Context for this question:\n{enriched_context}\nUse these verified facts directly in your answer."
+            })
+
+        for msg in history[-6:]:
+            role = "user" if msg.role in ("user", "human") else "assistant"
+            messages_payload.append({"role": role, "content": msg.content})
+        messages_payload.append({"role": "user", "content": message})
+
+        model = settings.LLM_MODEL if settings.LLM_MODEL and not settings.LLM_MODEL.startswith("gemini") else "llama3"
+
+        payload = {
+            "model": model,
+            "messages": messages_payload,
+            "stream": False,
+            "options": {
+                "temperature": 0.2,
+                "top_p": 0.9,
+                "top_k": 40,
+                "repeat_penalty": 1.35,
+                "num_gpu": 99,
+                "num_ctx": 2048,
+                "num_predict": 150,
+                "stop": [
+                    "<|im_end|>",
+                    "<|endoftext|>",
+                    "<|im_start|>",
+                    "NdrFc",
+                    "SOEVER",
+                    "комф",
+                    "vinfos",
+                    "basket",
+                    "asket",
+                    "spep",
+                    "cushion",
+                    "łazienk",
+                    "\nUser",
+                    "\nuser",
+                    "User:",
+                    "user\n",
+                    "\nassistant",
+                    "\nAssistant",
+                    "assistant:",
+                    "assistant\n"
+                ]
+            }
+        }
+        try:
+            response = _http_client.post(url, json=payload, timeout=120.0)
+            if response.status_code == 200:
+                data = response.json()
+                answer_text = data.get("message", {}).get("content", "")
+                cleaned_text = clean_latex_artifacts(answer_text)
+                return ChatResponse(status="success", answer=cleaned_text, reply=cleaned_text)
+            return ChatResponse(
+                status="error",
+                answer=f"⚠️ Ollama API returned status code {response.status_code}.",
+                reply=f"⚠️ Ollama API returned status code {response.status_code}.",
+                error=response.text
+            )
+        except Exception as e:
+            return ChatResponse(status="error", answer=f"⚠️ Failed to connect to local Ollama on port 11434. Is it running? ({e})", reply=str(e), error=str(e))
+
+    @staticmethod
     def _call_openai_chat(message: str, history: List[ChatMessage], api_key: str) -> ChatResponse:
         url = "https://api.openai.com/v1/chat/completions"
         headers = {
@@ -244,8 +490,15 @@ class LLMService:
         if not clean:
             return LLMStructuredOutput(request_type="unsupported", confidence=0.0)
 
+        # 1. Try fast local dataset & rule-based lookup first (sub-millisecond response)
+        fallback_res = LLMService._fallback_parse_prompt(clean)
+        if fallback_res and fallback_res.confidence >= 0.8:
+            return fallback_res
+
+        # 2. If no high-confidence local match, try external LLM prompt parser
+        provider = settings.LLM_PROVIDER.lower()
         api_key = settings.active_api_key
-        if api_key:
+        if api_key or provider == "ollama":
             try:
                 res = LLMService._call_external_prompt_parser(clean, api_key)
                 if res and res.confidence > 0.3:
@@ -253,7 +506,7 @@ class LLMService:
             except Exception as e:
                 logger.warning(f"LLM 3D prompt parser failed, using rule-based fallback: {e}")
 
-        return LLMService._fallback_parse_prompt(clean)
+        return fallback_res
 
     @staticmethod
     def _call_external_prompt_parser(prompt: str, api_key: str) -> Optional[LLMStructuredOutput]:
@@ -264,7 +517,34 @@ class LLMService:
         )
 
         model = settings.LLM_MODEL if settings.LLM_MODEL else "gemini-3.6-flash"
-        if "gemini" in settings.LLM_PROVIDER.lower() or settings.GEMINI_API_KEY:
+        provider = settings.LLM_PROVIDER.lower()
+        
+        if provider == "ollama":
+            url = "http://localhost:11434/api/chat"
+            ollama_model = model if model and not model.startswith("gemini") else "llama3"
+            payload = {
+                "model": ollama_model,
+                "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+                "format": "json",
+                "stream": False,
+                "options": {
+                    "num_gpu": 99,
+                    "num_ctx": 2048,
+                    "num_predict": 256,
+                    "stop": ["<|im_end|>", "<|endoftext|>", "<|im_start|>"]
+                }
+            }
+            try:
+                resp = _http_client.post(url, json=payload, timeout=4.0)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    content = data.get("message", {}).get("content", "")
+                    if content:
+                        parsed = json.loads(content)
+                        return LLMStructuredOutput(**parsed)
+            except Exception:
+                pass
+        elif "gemini" in provider or settings.GEMINI_API_KEY:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             payload = {
                 "contents": [
@@ -273,7 +553,7 @@ class LLMService:
                 "generationConfig": {"responseMimeType": "application/json"}
             }
             try:
-                resp = _http_client.post(url, json=payload)
+                resp = _http_client.post(url, json=payload, timeout=4.0)
                 if resp.status_code == 200:
                     data = resp.json()
                     parts = data.get("candidates", [])[0].get("content", {}).get("parts", [])
@@ -283,22 +563,23 @@ class LLMService:
             except Exception:
                 pass
 
-        url = "https://api.openai.com/v1/chat/completions"
-        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-        payload = {
-            "model": settings.LLM_MODEL,
-            "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-            "response_format": {"type": "json_object"}
-        }
-        try:
-            resp = _http_client.post(url, headers=headers, json=payload)
-            if resp.status_code == 200:
-                data = resp.json()
-                content = data["choices"][0]["message"]["content"]
-                if content:
-                    return LLMStructuredOutput(**json.loads(content))
-        except Exception:
-            pass
+        if api_key:
+            url = "https://api.openai.com/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            payload = {
+                "model": settings.LLM_MODEL,
+                "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+                "response_format": {"type": "json_object"}
+            }
+            try:
+                resp = _http_client.post(url, headers=headers, json=payload, timeout=4.0)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                    if content:
+                        return LLMStructuredOutput(**json.loads(content))
+            except Exception:
+                pass
 
         return None
 

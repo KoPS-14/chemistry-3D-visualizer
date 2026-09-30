@@ -238,6 +238,265 @@ REACTION_CLASS_TEMPLATES: Dict[str, Dict[str, Any]] = {
             }
         ]
     },
+    "CYCLOADDITION": {
+        "class_name": "Diels-Alder [4+2] Cycloaddition",
+        "stages": [
+            "1. Suprafacial Diene and Dienophile Alignment",
+            "2. Concerted 6-Electron Cyclic Transition State",
+            "3. Cyclohexene Ring Formation"
+        ],
+        "keyframes": [
+            {
+                "progress": 0.0,
+                "stage_name": "Suprafacial Approach",
+                "description": "Diene and dienophile orient parallel for optimal frontier orbital overlap (HOMO-LUMO).",
+                "reactant_offset": [-3.5, 0.0, 0.0],
+                "product_offset": [3.5, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            },
+            {
+                "progress": 0.50,
+                "stage_name": "Concerted Cyclic Transition State",
+                "description": "Simultaneous breaking of 2 pi-bonds and formation of 2 new C-C sigma bonds in a 6-electron ring.",
+                "reactant_offset": [-0.6, 0.0, 0.0],
+                "product_offset": [0.6, 0.0, 0.0],
+                "bond_stretch": 1.4,
+                "transition_state_active": True
+            },
+            {
+                "progress": 1.0,
+                "stage_name": "Cyclohexene Product",
+                "description": "Six-membered cyclohexene ring stabilizes into boat/chair conformation.",
+                "reactant_offset": [0.0, 0.0, 0.0],
+                "product_offset": [4.0, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            }
+        ]
+    },
+    "CONDENSATION": {
+        "class_name": "Aldol Condensation & Dehydration",
+        "stages": [
+            "1. Enolate Nucleophilic Addition",
+            "2. Beta-Hydroxy Carbonyl Intermediate",
+            "3. Base-Promoted Dehydration to Conjugated Enone"
+        ],
+        "keyframes": [
+            {
+                "progress": 0.0,
+                "stage_name": "Enolate Approach",
+                "description": "Resonance-stabilized enolate attacks carbonyl carbon electrophile.",
+                "reactant_offset": [-3.2, 0.0, 0.0],
+                "product_offset": [3.2, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            },
+            {
+                "progress": 0.50,
+                "stage_name": "C-C Bond Formation Transition State",
+                "description": "Carbon-carbon single bond forms as alkoxide oxygen coordinates with proton.",
+                "reactant_offset": [-0.5, 0.0, 0.0],
+                "product_offset": [0.5, 0.0, 0.0],
+                "bond_stretch": 1.35,
+                "transition_state_active": True
+            },
+            {
+                "progress": 1.0,
+                "stage_name": "Conjugated Product & Water",
+                "description": "Conjugated alpha,beta-unsaturated aldehyde/ketone forms with water byproduct.",
+                "reactant_offset": [0.0, 0.0, 0.0],
+                "product_offset": [4.2, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            }
+        ]
+    },
+    "ELECTROPHILIC_AROMATIC": {
+        "class_name": "Electrophilic Aromatic Substitution (EAS)",
+        "stages": [
+            "1. Electrophile Coordination with Aromatic Pi-Cloud",
+            "2. Wheland Arenium Ion (Sigma Complex) Transition State",
+            "3. Rearomatization & Proton Departure"
+        ],
+        "keyframes": [
+            {
+                "progress": 0.0,
+                "stage_name": "Pi-Complex Formation",
+                "description": "Activated carbocation / acylium electrophile approaches aromatic ring.",
+                "reactant_offset": [-3.4, 0.0, 0.0],
+                "product_offset": [3.4, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            },
+            {
+                "progress": 0.50,
+                "stage_name": "Wheland Sigma Complex",
+                "description": "Aromatic sextet temporarily disrupted; resonance-delocalized positive charge over 5 ring carbons.",
+                "reactant_offset": [-0.7, 0.0, 0.0],
+                "product_offset": [0.7, 0.0, 0.0],
+                "bond_stretch": 1.45,
+                "transition_state_active": True
+            },
+            {
+                "progress": 1.0,
+                "stage_name": "Substituted Aromatic Product & Acid",
+                "description": "Proton abstraction restores 6-pi aromatic resonance stability.",
+                "reactant_offset": [0.0, 0.0, 0.0],
+                "product_offset": [4.0, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            }
+        ]
+    },
+    "REFORMING": {
+        "class_name": "Catalytic Gas Reforming / Shift",
+        "stages": [
+            "1. High-Temperature Surface Chemisorption",
+            "2. Endothermic C-H & O-H Cleavage Transition State",
+            "3. Syngas (CO + H2) Formation & Gas Desorption"
+        ],
+        "keyframes": [
+            {
+                "progress": 0.0,
+                "stage_name": "Reactant Gas Mixing",
+                "description": "Hydrocarbon and steam molecules co-adsorb onto catalyst active sites.",
+                "reactant_offset": [-3.2, 0.0, 0.0],
+                "product_offset": [3.2, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            },
+            {
+                "progress": 0.50,
+                "stage_name": "C-H & H-O Dissociation",
+                "description": "Catalyst facilitates low-barrier thermal cleavage and oxygen transfer.",
+                "reactant_offset": [-0.6, 0.0, 0.0],
+                "product_offset": [0.6, 0.0, 0.0],
+                "bond_stretch": 1.5,
+                "transition_state_active": True
+            },
+            {
+                "progress": 1.0,
+                "stage_name": "Syngas Product Release",
+                "description": "Carbon monoxide and hydrogen gas molecules desorb into bulk stream.",
+                "reactant_offset": [0.0, 0.0, 0.0],
+                "product_offset": [4.2, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            }
+        ]
+    },
+    "REDOX_CATALYTIC": {
+        "class_name": "Heterogeneous Catalytic Oxidation",
+        "stages": [
+            "1. Reactant Diffusion & Metal Oxide Adsorption",
+            "2. Mars-van Krevelen Lattice Oxygen Transfer",
+            "3. Oxidized Product Desorption"
+        ],
+        "keyframes": [
+            {
+                "progress": 0.0,
+                "stage_name": "Surface Chemisorption",
+                "description": "Reactants coordinate to catalyst transition metal surface.",
+                "reactant_offset": [-3.0, 0.0, 0.0],
+                "product_offset": [3.0, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            },
+            {
+                "progress": 0.50,
+                "stage_name": "Oxygen Transfer Transition State",
+                "description": "Activated oxygen bridges substrate with reduced catalyst intermediate.",
+                "reactant_offset": [-0.5, 0.0, 0.0],
+                "product_offset": [0.5, 0.0, 0.0],
+                "bond_stretch": 1.4,
+                "transition_state_active": True
+            },
+            {
+                "progress": 1.0,
+                "stage_name": "Oxidized Product Formation",
+                "description": "Stable oxidized product desorbs and catalyst active site regenerates.",
+                "reactant_offset": [0.0, 0.0, 0.0],
+                "product_offset": [3.8, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            }
+        ]
+    },
+    "ESTERIFICATION": {
+        "class_name": "Fischer Esterification",
+        "stages": [
+            "1. Carbonyl Activation & Alcohol Nucleophilic Attack",
+            "2. Tetrahedral Intermediate & Proton Transfer",
+            "3. Water Cleavage & Ester Deprotonation"
+        ],
+        "keyframes": [
+            {
+                "progress": 0.0,
+                "stage_name": "Nucleophilic Approach",
+                "description": "Alcohol oxygen attacks protonated carboxylic acid carbonyl.",
+                "reactant_offset": [-3.2, 0.0, 0.0],
+                "product_offset": [3.2, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            },
+            {
+                "progress": 0.50,
+                "stage_name": "Tetrahedral Transition State",
+                "description": "Sp3-hybridized tetrahedral intermediate collapses as water departs as leaving group.",
+                "reactant_offset": [-0.6, 0.0, 0.0],
+                "product_offset": [0.6, 0.0, 0.0],
+                "bond_stretch": 1.45,
+                "transition_state_active": True
+            },
+            {
+                "progress": 1.0,
+                "stage_name": "Ester & Water Formation",
+                "description": "Deprotonation yields fragrant ester and stable water molecule.",
+                "reactant_offset": [0.0, 0.0, 0.0],
+                "product_offset": [4.0, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            }
+        ]
+    },
+    "HYDROLYSIS": {
+        "class_name": "Nucleophilic Ester Hydrolysis (Saponification)",
+        "stages": [
+            "1. Hydroxide Nucleophilic Attack on Ester Carbonyl",
+            "2. Tetrahedral Alkoxide Collapse",
+            "3. Irreversible Proton Transfer & Carboxylate Formation"
+        ],
+        "keyframes": [
+            {
+                "progress": 0.0,
+                "stage_name": "Hydroxide Approach",
+                "description": "Hydroxide anion directly attacks ester carbonyl center.",
+                "reactant_offset": [-3.0, 0.0, 0.0],
+                "product_offset": [3.0, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            },
+            {
+                "progress": 0.50,
+                "stage_name": "Tetrahedral Intermediate",
+                "description": "C-O alkoxy bond stretches and breaks as carbonyl reforms.",
+                "reactant_offset": [-0.5, 0.0, 0.0],
+                "product_offset": [0.5, 0.0, 0.0],
+                "bond_stretch": 1.4,
+                "transition_state_active": True
+            },
+            {
+                "progress": 1.0,
+                "stage_name": "Carboxylate Anion & Alcohol",
+                "description": "Irreversible deprotonation forms resonance-stabilized carboxylate and alcohol.",
+                "reactant_offset": [0.0, 0.0, 0.0],
+                "product_offset": [4.0, 0.0, 0.0],
+                "bond_stretch": 1.0,
+                "transition_state_active": False
+            }
+        ]
+    },
     "GENERAL": {
         "class_name": "Chemical Transformation",
         "stages": [
@@ -281,17 +540,32 @@ REACTION_CLASS_TEMPLATES: Dict[str, Dict[str, Any]] = {
 def get_reaction_animation_template(reaction_type: str) -> Dict[str, Any]:
     rxn_type_clean = reaction_type.upper().strip()
     
-    if "SN2" in rxn_type_clean:
+    if "SN2" in rxn_type_clean or "SUBSTITUTION" in rxn_type_clean:
         return REACTION_CLASS_TEMPLATES["SN2"]
-    elif "ADDITION" in rxn_type_clean:
+    elif "CYCLOADDITION" in rxn_type_clean or "DIELS" in rxn_type_clean:
+        return REACTION_CLASS_TEMPLATES["CYCLOADDITION"]
+    elif "CONDENSATION" in rxn_type_clean or "ALDOL" in rxn_type_clean:
+        return REACTION_CLASS_TEMPLATES["CONDENSATION"]
+    elif "ELECTROPHILIC_AROMATIC" in rxn_type_clean or "FRIEDEL" in rxn_type_clean or "AROMATIC" in rxn_type_clean:
+        return REACTION_CLASS_TEMPLATES["ELECTROPHILIC_AROMATIC"]
+    elif "REFORMING" in rxn_type_clean or "SHIFT" in rxn_type_clean or "SMR" in rxn_type_clean:
+        return REACTION_CLASS_TEMPLATES["REFORMING"]
+    elif "REDOX_CATALYTIC" in rxn_type_clean or "CONTACT" in rxn_type_clean or "OZONE" in rxn_type_clean:
+        return REACTION_CLASS_TEMPLATES["REDOX_CATALYTIC"]
+    elif "ESTERIFICATION" in rxn_type_clean or "FISCHER" in rxn_type_clean:
+        return REACTION_CLASS_TEMPLATES["ESTERIFICATION"]
+    elif "HYDROLYSIS" in rxn_type_clean or "SAPONIFICATION" in rxn_type_clean:
+        return REACTION_CLASS_TEMPLATES["HYDROLYSIS"]
+    elif "ADDITION" in rxn_type_clean or "HYDROGENATION" in rxn_type_clean or "EPOXIDATION" in rxn_type_clean:
         return REACTION_CLASS_TEMPLATES["ADDITION"]
-    elif "NEUTRALIZATION" in rxn_type_clean or "ACIDBASE" in rxn_type_clean:
+    elif "NEUTRALIZATION" in rxn_type_clean or "ACIDBASE" in rxn_type_clean or "ACID_BASE" in rxn_type_clean:
         return REACTION_CLASS_TEMPLATES["NEUTRALIZATION"]
-    elif "ELIMINATION" in rxn_type_clean or "E2" in rxn_type_clean or "E1" in rxn_type_clean:
+    elif "ELIMINATION" in rxn_type_clean or "E2" in rxn_type_clean or "E1" in rxn_type_clean or "DEHYDROGENATION" in rxn_type_clean:
         return REACTION_CLASS_TEMPLATES["ELIMINATION"]
-    elif "COMBUSTION" in rxn_type_clean:
+    elif "COMBUSTION" in rxn_type_clean or "RESPIRATION" in rxn_type_clean:
         return REACTION_CLASS_TEMPLATES["COMBUSTION"]
     elif "OXIDATION" in rxn_type_clean:
         return REACTION_CLASS_TEMPLATES["OXIDATION"]
     else:
         return REACTION_CLASS_TEMPLATES["GENERAL"]
+

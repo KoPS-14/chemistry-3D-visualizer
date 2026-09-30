@@ -1,0 +1,32 @@
+{
+  "reaction_id": "fischer_esterification_benzoic_methanol",
+  "name": "Fischer Esterification of Benzoic Acid with Methanol",
+  "reaction_type": "ESTERIFICATION",
+  "description": "Acid-catalyzed condensation between aromatic benzoic acid and methanol forming methyl benzoate with water byproduct.",
+  "balanced_equation": "C6H5COOH + CH3OH -> C6H5COOCH3 + H2O",
+  "reactants": [
+    {
+      "name": "Benzoic Acid",
+      "smiles": "c1ccccc1C(=O)O"
+    },
+    {
+      "name": "Methanol",
+      "smiles": "CO"
+    }
+  ],
+  "products": [
+    {
+      "name": "Methyl Benzoate",
+      "smiles": "c1ccccc1C(=O)OC"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "1. Protonation & Methanol Nucleophilic Attack",
+    "2. Tetrahedral Hemiacetal Intermediate",
+    "3. Water Elimination & Ester Deprotonation"
+  ]
+}

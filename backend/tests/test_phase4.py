@@ -10,14 +10,14 @@ client = TestClient(app)
 
 
 def test_all_25_reaction_templates_load():
-    """Test that all 25 reaction JSON template datasets exist and contain valid chemical SMILES."""
+    """Test that all 40+ reaction JSON template datasets exist and contain valid chemical SMILES."""
     from pathlib import Path
     import json
     from app.core.config import settings
 
     rxn_dir = settings.DATA_DIR / "reactions"
     json_files = list(rxn_dir.glob("*.json"))
-    assert len(json_files) >= 24, f"Expected at least 24 reaction template files, found {len(json_files)}"
+    assert len(json_files) >= 40, f"Expected at least 40 reaction template files, found {len(json_files)}"
 
     for fpath in json_files:
         with open(fpath, "r", encoding="utf-8") as f:
@@ -39,7 +39,11 @@ def test_all_25_reaction_templates_load():
 
 def test_reaction_animation_templates():
     """Test that animation keyframe templates are returned for all major reaction classes."""
-    classes = ["SN2", "Addition", "Neutralization", "Elimination", "Combustion", "Oxidation", "Synthesis"]
+    classes = [
+        "SN2", "Addition", "Neutralization", "Elimination", "Combustion",
+        "Oxidation", "Cycloaddition", "Condensation", "Electrophilic_Aromatic",
+        "Reforming", "Redox_Catalytic", "Esterification", "Hydrolysis"
+    ]
     for c in classes:
         tmpl = get_reaction_animation_template(c)
         assert tmpl is not None
@@ -51,9 +55,12 @@ def test_visualize_endpoint_with_phase4_reactions():
     """Test /api/visualize endpoint returns 3D structures and keyframe animation template."""
     prompts = [
         "SN2 Substitution of Methyl Bromide with Hydroxide",
-        "Catalytic Hydrogenation of Ethylene",
-        "Methane Complete Combustion",
-        "Fischer Esterification of Acetic Acid & Ethanol"
+        "Diels-Alder Cycloaddition of Butadiene and Ethylene",
+        "Friedel-Crafts Alkylation of Benzene",
+        "Aldol Condensation of Acetaldehyde",
+        "Steam Methane Reforming (SMR)",
+        "Contact Process: Sulfur Dioxide Oxidation",
+        "Fischer Esterification of Benzoic Acid with Methanol"
     ]
     for prompt in prompts:
         resp = client.post("/api/visualize", json={"prompt": prompt})
@@ -64,3 +71,4 @@ def test_visualize_endpoint_with_phase4_reactions():
         rxn = json_data["data"]
         assert "animation_template" in rxn and rxn["animation_template"] is not None
         assert "stages" in rxn and len(rxn["stages"]) > 0
+

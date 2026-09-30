@@ -123,3 +123,76 @@ class ChatResponse(BaseModel):
     reply: str
     suggested_visualize_prompt: Optional[str] = None
     error: Optional[str] = None
+
+
+class KineticsRequest(BaseModel):
+    reaction_type: str = Field(..., description="Type of the reaction (e.g., SN2, Addition, etc.)")
+    conditions: ReactionConditions = Field(default_factory=ReactionConditions)
+
+
+class KineticsResponse(BaseModel):
+    status: str = Field(..., description="'success' or 'error'")
+    temperature_c: Optional[float] = 25.0
+    temperature_k: Optional[float] = 298.15
+    pressure_atm: Optional[float] = 1.0
+    catalyst: Optional[str] = "none"
+    solvent: Optional[str] = "aqueous"
+    concentration_m: Optional[float] = 1.0
+    baseline_activation_energy_kj: Optional[float] = 70.0
+    effective_activation_energy_kj: Optional[float] = 70.0
+    catalyst_reduction_kj: Optional[float] = 0.0
+    relative_rate_multiplier: Optional[float] = 1.0
+    simulation_speed_factor: Optional[float] = 1.0
+    rate_impact: str = Field(..., description="Educational explanation of how conditions affect reaction rate")
+    activation_energy_impact: str = Field(..., description="Educational explanation of how conditions affect activation energy")
+    le_chatelier_shift: Optional[str] = ""
+    educational_insight: str = Field(..., description="Summary educational insight based on conditions")
+
+
+class ElementExplainRequest(BaseModel):
+    atomic_number: int
+    symbol: str
+    name: str
+    category: Optional[str] = "unknown"
+    group: Optional[Union[int, str]] = None
+    period: Optional[Union[int, str]] = None
+    electron_configuration: Optional[str] = ""
+    atomic_mass: Optional[Union[float, str]] = None
+    summary: Optional[str] = ""
+
+    model_config = {
+        "extra": "ignore"
+    }
+
+
+class ElementExplainResponse(BaseModel):
+    status: str = Field(..., description="'success' or 'error'")
+    element_name: str
+    symbol: str
+    atomic_number: int
+    explanation: str
+
+
+class ReactionExplainRequest(BaseModel):
+    name: str
+    reaction_type: str
+    balanced_equation: Optional[str] = None
+    conditions: Optional[Union[ReactionConditions, dict]] = None
+    kinetics: Optional[dict] = None
+    is_interrupted: Optional[bool] = False
+
+    model_config = {
+        "extra": "ignore"
+    }
+
+
+class ReactionExplainResponse(BaseModel):
+    status: str = Field(..., description="'success' or 'error'")
+    reaction_name: str
+    reaction_type: str
+    explanation: str
+    is_interrupted: bool = False
+
+
+
+

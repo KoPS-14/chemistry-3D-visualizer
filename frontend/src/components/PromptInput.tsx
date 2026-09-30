@@ -15,10 +15,13 @@ const EXAMPLE_MOLECULE_PROMPTS = [
 
 const EXAMPLE_REACTION_PROMPTS = [
   'Show SN2 reaction of methyl bromide with hydroxide',
-  'Show water formation reaction',
-  'Show acid base neutralization',
+  'Diels-Alder Cycloaddition of Butadiene and Ethylene',
+  'Friedel-Crafts Alkylation of Benzene',
+  'Aldol Condensation of Acetaldehyde',
+  'Steam Methane Reforming (SMR)',
+  'Contact Process: Sulfur Dioxide Oxidation',
   'Show Haber process synthesis',
-  'Show Esterification reaction',
+  'Catalytic Hydrogenation of Benzene',
 ];
 
 export const PromptInput: React.FC<PromptInputProps> = ({ onSubmit, isLoading }) => {
@@ -39,15 +42,17 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSubmit, isLoading })
   };
 
   return (
-    <div className="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-2xl backdrop-blur-xl">
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+    <div className="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 relative z-10">
         <div className="relative flex-1">
           <input
             type="text"
             value={promptText}
             onChange={(e) => setPromptText(e.target.value)}
-            placeholder="Enter a molecule or reaction prompt (e.g. 'Show SN2 reaction...')..."
-            className="w-full bg-slate-950/90 border border-slate-700/80 focus:border-cyan-500 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 text-xs sm:text-sm transition shadow-inner font-mono"
+            placeholder="Enter a molecule SMILES or chemical reaction prompt (e.g., 'Show ethanol in 3D' or 'Diels-Alder Cycloaddition')..."
+            className="w-full bg-slate-950/90 border border-slate-700/80 focus:border-cyan-400 rounded-xl px-4 py-3.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 text-xs sm:text-sm transition shadow-inner font-mono"
             disabled={isLoading}
           />
         </div>
@@ -55,7 +60,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSubmit, isLoading })
         <button
           type="submit"
           disabled={isLoading || !promptText.trim()}
-          className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-600 text-white font-semibold px-7 py-3 rounded-xl text-xs sm:text-sm transition-all shadow-lg shadow-cyan-600/30 flex items-center justify-center gap-2 min-w-[130px] cursor-pointer"
+          className="bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-600 text-white font-bold px-7 py-3.5 rounded-xl text-xs sm:text-sm transition-all shadow-lg shadow-cyan-600/30 flex items-center justify-center gap-2 min-w-[140px] cursor-pointer"
         >
           {isLoading ? (
             <>
@@ -68,23 +73,25 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSubmit, isLoading })
           ) : (
             <>
               <span>⚡</span>
-              <span>Visualize 3D</span>
+              <span>Render 3D Model</span>
             </>
           )}
         </button>
       </form>
 
       {/* Preset Example Prompts */}
-      <div className="mt-4 flex flex-col gap-2.5 text-xs">
+      <div className="mt-4 flex flex-col gap-2.5 text-xs relative z-10">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-slate-400 font-semibold font-mono text-[11px]">🧪 Molecules:</span>
+          <span className="text-cyan-400 font-bold font-mono text-[11px] flex items-center gap-1">
+            <span>🧪</span> 3D Molecules:
+          </span>
           {EXAMPLE_MOLECULE_PROMPTS.map((example) => (
             <button
               key={example}
               type="button"
               onClick={() => handleExampleClick(example)}
               disabled={isLoading}
-              className="bg-slate-950/80 hover:bg-slate-800 text-cyan-400 hover:text-cyan-300 px-3 py-1 rounded-lg border border-cyan-900/40 transition cursor-pointer font-mono text-[11px] shadow-sm"
+              className="bg-slate-950/80 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 px-3 py-1 rounded-lg border border-cyan-800/40 hover:border-cyan-500/60 transition cursor-pointer font-mono text-[11px] shadow-sm"
             >
               {example}
             </button>
@@ -92,14 +99,16 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSubmit, isLoading })
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-slate-400 font-semibold font-mono text-[11px]">🔥 Reactions:</span>
+          <span className="text-amber-400 font-bold font-mono text-[11px] flex items-center gap-1">
+            <span>🔥</span> Reactions:
+          </span>
           {EXAMPLE_REACTION_PROMPTS.map((example) => (
             <button
               key={example}
               type="button"
               onClick={() => handleExampleClick(example)}
               disabled={isLoading}
-              className="bg-slate-950/80 hover:bg-slate-800 text-amber-400 hover:text-amber-300 px-3 py-1 rounded-lg border border-amber-900/40 transition cursor-pointer font-mono text-[11px] shadow-sm"
+              className="bg-slate-950/80 hover:bg-slate-800 text-amber-300 hover:text-amber-200 px-3 py-1 rounded-lg border border-amber-800/40 hover:border-amber-500/60 transition cursor-pointer font-mono text-[11px] shadow-sm"
             >
               {example}
             </button>
@@ -109,3 +118,4 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSubmit, isLoading })
     </div>
   );
 };
+

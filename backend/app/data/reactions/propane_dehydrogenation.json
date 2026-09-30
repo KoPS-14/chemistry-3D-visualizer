@@ -1,0 +1,28 @@
+{
+  "reaction_id": "propane_dehydrogenation",
+  "name": "Catalytic Dehydrogenation of Propane",
+  "reaction_type": "ELIMINATION",
+  "description": "Endothermic catalytic conversion of propane into propene and hydrogen gas over a platinum/alumina catalyst.",
+  "balanced_equation": "C3H8 -> C3H6 + H2",
+  "reactants": [
+    {
+      "name": "Propane",
+      "smiles": "CCC"
+    }
+  ],
+  "products": [
+    {
+      "name": "Propene",
+      "smiles": "C=CC"
+    },
+    {
+      "name": "Hydrogen Gas",
+      "smiles": "[H][H]"
+    }
+  ],
+  "stages": [
+    "1. Alkane Activation on Catalyst Surface",
+    "2. C-H Bond Cleavage & Pi-Bond Formation",
+    "3. Propene and Hydrogen Desorption"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "reaction_id": "hydrogenation_benzene",
+  "name": "Catalytic Hydrogenation of Benzene",
+  "reaction_type": "ADDITION",
+  "description": "Exothermic heterogeneous catalytic hydrogenation of benzene over platinum or nickel catalyst to yield saturated cyclohexane.",
+  "balanced_equation": "C6H6 + 3 H2 -> C6H12",
+  "reactants": [
+    {
+      "name": "Benzene",
+      "smiles": "c1ccccc1"
+    },
+    {
+      "name": "Hydrogen Gas",
+      "smiles": "[H][H]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Cyclohexane",
+      "smiles": "C1CCCCC1"
+    }
+  ],
+  "stages": [
+    "1. Metal Surface Chemisorption",
+    "2. Sequential H-Atom Insertion",
+    "3. Desorption of Saturated Cyclohexane"
+  ]
+}

@@ -1,0 +1,19 @@
+FROM ./qwen2.5-3b.Q4_K_M.gguf
+
+# Qwen uses ChatML formatting. Unsloth usually bakes this into the GGUF,
+# but providing it here ensures Ollama parses it perfectly.
+TEMPLATE """{{ if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{ if .Prompt }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+{{ end }}<|im_start|>assistant
+{{ .Response }}<|im_end|>
+"""
+
+PARAMETER stop "<|im_start|>"
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|endoftext|>"
+PARAMETER num_gpu 99
+PARAMETER num_ctx 2048
+PARAMETER num_predict 1024
+

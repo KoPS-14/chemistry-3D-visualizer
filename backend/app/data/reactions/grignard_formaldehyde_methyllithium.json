@@ -1,0 +1,28 @@
+{
+  "reaction_id": "grignard_formaldehyde_methyllithium",
+  "name": "Organometallic Addition to Formaldehyde",
+  "reaction_type": "ADDITION",
+  "description": "Nucleophilic organometallic addition of carbanion-equivalent methyllithium to formaldehyde yielding an alkoxide intermediate which upon protonation forms ethanol.",
+  "balanced_equation": "HCHO + CH3Li -> CH3CH2OH + Li+",
+  "reactants": [
+    {
+      "name": "Formaldehyde",
+      "smiles": "C=O"
+    },
+    {
+      "name": "Methyllithium",
+      "smiles": "C[Li]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Ethanol",
+      "smiles": "CCO"
+    }
+  ],
+  "stages": [
+    "1. Nucleophilic Carbanion Attack on Carbonyl",
+    "2. Tetrahedral Alkoxide Intermediate",
+    "3. Protonation & Product Formation"
+  ]
+}

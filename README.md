@@ -22,6 +22,7 @@ Copy `.env.example` to `.env`:
 cp .env.example .env
 ```
 
+
 ### 3. Run FastAPI Backend
 ```bash
 python -m uvicorn app.main:app --app-dir backend --reload --port 8000

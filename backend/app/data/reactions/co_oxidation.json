@@ -1,0 +1,28 @@
+{
+  "reaction_id": "co_oxidation",
+  "name": "Catalytic Carbon Monoxide Oxidation",
+  "reaction_type": "OXIDATION",
+  "description": "Catalytic oxidation of toxic carbon monoxide by oxygen over catalytic converter platinum surface yielding carbon dioxide.",
+  "balanced_equation": "2 CO + O2 -> 2 CO2",
+  "reactants": [
+    {
+      "name": "Carbon Monoxide",
+      "smiles": "[C-]#[O+]"
+    },
+    {
+      "name": "Oxygen Gas",
+      "smiles": "O=O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Carbon Dioxide",
+      "smiles": "O=C=O"
+    }
+  ],
+  "stages": [
+    "1. CO and O2 Co-adsorption on Catalyst",
+    "2. Oxygen Dissociation & CO-O Transition State",
+    "3. Carbon Dioxide Gas Release"
+  ]
+}

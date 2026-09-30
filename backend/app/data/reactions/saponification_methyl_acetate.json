@@ -1,0 +1,32 @@
+{
+  "reaction_id": "saponification_methyl_acetate",
+  "name": "Saponification of Methyl Acetate",
+  "reaction_type": "HYDROLYSIS",
+  "description": "Irreversible base-catalyzed ester hydrolysis of methyl acetate by hydroxide ion forming acetate ion and methanol.",
+  "balanced_equation": "CH3COOCH3 + OH- -> CH3COO- + CH3OH",
+  "reactants": [
+    {
+      "name": "Methyl Acetate",
+      "smiles": "CC(=O)OC"
+    },
+    {
+      "name": "Hydroxide Ion",
+      "smiles": "[OH-]"
+    }
+  ],
+  "products": [
+    {
+      "name": "Acetate Ion",
+      "smiles": "CC(=O)[O-]"
+    },
+    {
+      "name": "Methanol",
+      "smiles": "CO"
+    }
+  ],
+  "stages": [
+    "1. Nucleophilic Attack on Ester Carbonyl",
+    "2. Tetrahedral Intermediate Collapse",
+    "3. Irreversible Proton Transfer to Methoxide"
+  ]
+}

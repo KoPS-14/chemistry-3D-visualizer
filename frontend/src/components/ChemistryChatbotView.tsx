@@ -1,10 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
+import type { NavTab } from './Navbar';
+import { VisualizationSuggestion } from './VisualizationSuggestion';
+import type { SuggestionItem } from './VisualizationSuggestion';
 
 export interface ChatMessageItem {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  suggestion?: SuggestionItem | null;
+}
+
+interface ChemistryChatbotViewProps {
+  onNavigateAndVisualize?: (targetTab: NavTab, promptOrSearch: string) => void;
 }
 
 const STARTER_PROMPTS = [
@@ -26,8 +34,114 @@ const STARTER_PROMPTS = [
   },
 ];
 
-export const ChemistryChatbotView: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessageItem[]>([]);
+const detectVisualizationSuggestion = (text: string): SuggestionItem | null => {
+  const lower = text.toLowerCase();
+
+  if (lower.includes('sn2') || lower.includes('substitution') || lower.includes('methyl bromide')) {
+    return {
+      targetTab: 'reactions',
+      promptOrSearch: 'Show SN2 reaction of methyl bromide with hydroxide',
+      name: 'SN2 Reaction Mechanism',
+      type: 'reaction',
+      details: 'Nucleophilic inversion at sp3 carbon center',
+    };
+  }
+  if (lower.includes('diels-alder') || lower.includes('cycloaddition')) {
+    return {
+      targetTab: 'reactions',
+      promptOrSearch: 'Diels-Alder Cycloaddition of Butadiene and Ethylene',
+      name: 'Diels-Alder Cycloaddition',
+      type: 'reaction',
+      details: '[4+2] concerted pericyclic reaction',
+    };
+  }
+  if (lower.includes('haber') || lower.includes('ammonia')) {
+    return {
+      targetTab: 'reactions',
+      promptOrSearch: 'Show Haber process synthesis',
+      name: 'Haber Process (N2 + 3H2 → 2NH3)',
+      type: 'reaction',
+      details: 'Industrial ammonia synthesis under Fe catalyst',
+    };
+  }
+  if (lower.includes('ethanol') || lower.includes('c2h5oh')) {
+    return {
+      targetTab: 'molecules',
+      promptOrSearch: 'Show ethanol in 3D',
+      name: 'Ethanol (C2H5OH)',
+      type: 'molecule',
+      details: 'Primary alcohol with hydrogen bonding geometry',
+    };
+  }
+  if (lower.includes('aspirin') || lower.includes('acetylsalicylic')) {
+    return {
+      targetTab: 'molecules',
+      promptOrSearch: 'Show aspirin in 3D',
+      name: 'Aspirin (C9H8O4)',
+      type: 'molecule',
+      details: 'Analgesic NSAID with ester & carboxyl functional groups',
+    };
+  }
+  if (lower.includes('glucose') || lower.includes('c6h12o6')) {
+    return {
+      targetTab: 'molecules',
+      promptOrSearch: 'Show glucose in 3D',
+      name: 'D-Glucose (C6H12O6)',
+      type: 'molecule',
+      details: 'Monosaccharide hexose chair conformation',
+    };
+  }
+  if (lower.includes('methane') || lower.includes('ch4') || lower.includes('tetrahedral')) {
+    return {
+      targetTab: 'molecules',
+      promptOrSearch: 'Show methane in 3D',
+      name: 'Methane (CH4)',
+      type: 'molecule',
+      details: 'Tetrahedral sp3 hybridized hydrocarbon',
+    };
+  }
+  if (lower.includes('water') || lower.includes('h2o') || lower.includes('polar')) {
+    return {
+      targetTab: 'molecules',
+      promptOrSearch: 'Show water in 3D',
+      name: 'Water (H2O)',
+      type: 'molecule',
+      details: 'Bent polar geometry with 104.5° bond angle',
+    };
+  }
+  if (lower.includes('gold') || lower.includes('au') || lower.includes('atomic number 79')) {
+    return {
+      targetTab: 'elements',
+      promptOrSearch: '79',
+      name: 'Gold (Au, Z=79)',
+      type: 'element',
+      details: 'Transition metal with [Xe] 4f14 5d10 6s1 configuration',
+    };
+  }
+  if (lower.includes('carbon') || lower.includes('tetravalent')) {
+    return {
+      targetTab: 'elements',
+      promptOrSearch: '6',
+      name: 'Carbon (C, Z=6)',
+      type: 'element',
+      details: 'Group 14 nonmetal forming organic framework',
+    };
+  }
+
+  return null;
+};
+
+export const ChemistryChatbotView: React.FC<ChemistryChatbotViewProps> = ({
+  onNavigateAndVisualize,
+}) => {
+  const [messages, setMessages] = useState<ChatMessageItem[]>(() => {
+    const saved = sessionStorage.getItem('chemAiChatHistory');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem('chemAiChatHistory', JSON.stringify(messages));
+  }, [messages]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -83,11 +197,14 @@ export const ChemistryChatbotView: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         const aiAnswer = data.answer || data.reply || 'No response received.';
+        const sug = detectVisualizationSuggestion(text + ' ' + aiAnswer);
+
         const aiMessage: ChatMessageItem = {
           id: `ai-${Date.now()}`,
           role: 'assistant',
           content: aiAnswer,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          suggestion: sug,
         };
         setMessages((prev) => [...prev, aiMessage]);
       } else {
@@ -95,7 +212,7 @@ export const ChemistryChatbotView: React.FC = () => {
         const aiMessage: ChatMessageItem = {
           id: `err-${Date.now()}`,
           role: 'assistant',
-          content: errorData.detail || errorData.answer || '⚠️ Error communicating with Gemini API backend service.',
+          content: errorData.detail || errorData.answer || '⚠️ Error communicating with ChemAI backend service.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
         setMessages((prev) => [...prev, aiMessage]);
@@ -132,21 +249,22 @@ export const ChemistryChatbotView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] max-w-5xl mx-auto w-full bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-140px)] max-w-5xl mx-auto w-full bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
       {/* Chat Top Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/60">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-teal-500 to-indigo-600 flex items-center justify-center text-white text-lg shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/40">
-            🧪
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/80">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-teal-500 to-indigo-600 flex items-center justify-center text-white text-lg shadow-lg shadow-cyan-500/25 ring-1 ring-cyan-400/40">
+            🤖
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-white tracking-wide">Gemini Chemistry Chatbot</h2>
-              <span className="text-[10px] font-mono font-semibold bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-700/60 shadow-sm">
-                Gemini 1.5 Flash
+              <h2 className="text-sm font-extrabold text-white tracking-wide bg-gradient-to-r from-white via-cyan-200 to-teal-300 bg-clip-text text-transparent">ChemAI Assistant</h2>
+              <span className="text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 px-2.5 py-0.5 rounded-full border border-cyan-700/60 shadow-sm flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                ChemAI Qwen
               </span>
             </div>
-            <p className="text-xs text-slate-400">Conversational AI for mechanisms, physical chemistry, calculations & theory</p>
+            <p className="text-xs text-slate-400 font-sans">Intelligent Chemistry Engine for mechanisms, thermodynamics, physical calculations & theory</p>
           </div>
         </div>
 
@@ -221,9 +339,17 @@ export const ChemistryChatbotView: React.FC = () => {
                       : 'bg-slate-950/90 text-slate-100 border-slate-800 rounded-tl-none'
                   }`}
                 >
-                  <div className="whitespace-pre-wrap prose prose-invert max-w-none text-xs sm:text-sm">
+                  <div className="whitespace-pre-wrap prose prose-invert max-w-none text-xs sm:text-sm font-sans">
                     {msg.content}
                   </div>
+
+                  {/* Interactive 3D Visualization Pill Trigger */}
+                  {!isUser && msg.suggestion && onNavigateAndVisualize && (
+                    <VisualizationSuggestion
+                      suggestion={msg.suggestion}
+                      onNavigateAndVisualize={onNavigateAndVisualize}
+                    />
+                  )}
 
                   {/* Copy Button on AI responses */}
                   {!isUser && (
@@ -269,7 +395,7 @@ export const ChemistryChatbotView: React.FC = () => {
               <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" />
               <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.2s]" />
               <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.4s]" />
-              <span className="font-mono text-slate-300">Gemini is reasoning through chemistry concepts...</span>
+              <span className="font-mono text-slate-300">ChemAI is reasoning through chemistry concepts...</span>
             </div>
           </div>
         )}
@@ -302,7 +428,7 @@ export const ChemistryChatbotView: React.FC = () => {
           </button>
         </div>
         <p className="text-[10px] text-center text-slate-500 mt-2 font-mono">
-          Powered by Google Gemini 3.6 Flash • Press Enter to send • Shift + Enter for new line
+          Powered by ChemAI Qwen • Press Enter to send • Shift + Enter for new line
         </p>
       </div>
     </div>

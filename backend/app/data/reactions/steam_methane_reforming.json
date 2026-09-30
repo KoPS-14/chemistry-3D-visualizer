@@ -1,0 +1,32 @@
+{
+  "reaction_id": "steam_methane_reforming",
+  "name": "Steam Methane Reforming (SMR)",
+  "reaction_type": "REFORMING",
+  "description": "High-temperature endothermic catalytic reaction of methane with steam over a nickel catalyst producing synthesis gas (carbon monoxide and hydrogen).",
+  "balanced_equation": "CH4 + H2O -> CO + 3 H2",
+  "reactants": [
+    {
+      "name": "Methane",
+      "smiles": "C"
+    },
+    {
+      "name": "Water Vapor",
+      "smiles": "O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Carbon Monoxide",
+      "smiles": "[C-]#[O+]"
+    },
+    {
+      "name": "Hydrogen Gas",
+      "smiles": "[H][H]"
+    }
+  ],
+  "stages": [
+    "1. High-Temperature Surface Collision",
+    "2. C-H Bond Dissociation & Oxygen Transfer",
+    "3. Syngas (CO + H2) Release"
+  ]
+}

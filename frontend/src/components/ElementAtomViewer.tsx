@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -80,9 +80,29 @@ const ElectronOrbitsGroup: React.FC<{
 const AtomScene: React.FC<{
   element: ElementData;
   controlsRef: React.RefObject<OrbitControlsImpl | null>;
-}> = ({ element, controlsRef }) => {
+  dragMode: 'rotate' | 'pan';
+}> = ({ element, controlsRef, dragMode }) => {
   const numShells = element.shells?.length || 1;
   const maxRadius = 1.6 + (numShells - 1) * 1.2;
+
+  useEffect(() => {
+    if (controlsRef.current) {
+      if (dragMode === 'pan') {
+        controlsRef.current.mouseButtons = {
+          LEFT: THREE.MOUSE.PAN,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.ROTATE,
+        };
+      } else {
+        controlsRef.current.mouseButtons = {
+          LEFT: THREE.MOUSE.ROTATE,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.PAN,
+        };
+      }
+      controlsRef.current.update();
+    }
+  }, [dragMode, controlsRef]);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -108,8 +128,12 @@ const AtomScene: React.FC<{
         enableDamping
         dampingFactor={0.08}
         rotateSpeed={0.8}
-        zoomSpeed={1.0}
-        panSpeed={0.8}
+        zoomSpeed={1.5}
+        panSpeed={1.0}
+        screenSpacePanning
+        zoomToCursor
+        minDistance={0.2}
+        maxDistance={150.0}
       />
     </>
   );
@@ -117,6 +141,7 @@ const AtomScene: React.FC<{
 
 export const ElementAtomViewer: React.FC<ElementAtomViewerProps> = ({ element }) => {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
+  const [dragMode, setDragMode] = useState<'rotate' | 'pan'>('rotate');
 
   const handleResetCamera = () => {
     if (controlsRef.current && element) {
@@ -125,6 +150,31 @@ export const ElementAtomViewer: React.FC<ElementAtomViewerProps> = ({ element })
       const targetDist = Math.max(maxRadius * 2.8, 7);
       controlsRef.current.target.set(0, 0, 0);
       controlsRef.current.object.position.set(0, targetDist * 0.2, targetDist);
+      controlsRef.current.update();
+      setDragMode('rotate');
+    }
+  };
+
+  const handleZoomIn = () => {
+    if (controlsRef.current) {
+      controlsRef.current.dollyIn(1.3);
+      controlsRef.current.update();
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (controlsRef.current) {
+      controlsRef.current.dollyOut(1.3);
+      controlsRef.current.update();
+    }
+  };
+
+  const handlePanShift = (dx: number, dy: number) => {
+    if (controlsRef.current) {
+      controlsRef.current.target.x += dx;
+      controlsRef.current.target.y += dy;
+      controlsRef.current.object.position.x += dx;
+      controlsRef.current.object.position.y += dy;
       controlsRef.current.update();
     }
   };
@@ -139,25 +189,85 @@ export const ElementAtomViewer: React.FC<ElementAtomViewerProps> = ({ element })
 
   return (
     <div className="relative w-full h-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
-      <Canvas camera={{ position: [0, 2, 8], fov: 45 }} gl={{ antialias: true }}>
-        <AtomScene element={element} controlsRef={controlsRef} />
+      {/* Navigation Controls HUD */}
+      <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
+        <div className="flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-xl border border-slate-800 shadow-2xl font-mono text-xs">
+          <button
+            onClick={() => setDragMode((prev) => (prev === 'rotate' ? 'pan' : 'rotate'))}
+            className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer flex items-center gap-1 ${
+              dragMode === 'pan'
+                ? 'bg-emerald-600 text-white border border-emerald-400 shadow-md shadow-emerald-600/40 animate-pulse'
+                : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
+            }`}
+            title={dragMode === 'pan' ? 'Left click drag moves camera view anywhere!' : 'Click to enable Drag-to-Move Pan Mode'}
+          >
+            {dragMode === 'pan' ? '🖐️ Move View Active' : '🔄 Drag Mode: Orbit'}
+          </button>
+
+          <button
+            onClick={handleZoomIn}
+            className="w-7 h-7 bg-slate-950 hover:bg-slate-800 text-white font-bold rounded-lg border border-slate-800 transition flex items-center justify-center cursor-pointer text-sm shadow"
+            title="Zoom In (+)"
+          >
+            +
+          </button>
+          <button
+            onClick={handleZoomOut}
+            className="w-7 h-7 bg-slate-950 hover:bg-slate-800 text-white font-bold rounded-lg border border-slate-800 transition flex items-center justify-center cursor-pointer text-sm shadow"
+            title="Zoom Out (-)"
+          >
+            −
+          </button>
+          <button
+            onClick={handleResetCamera}
+            className="px-2 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-800 text-xs font-mono transition cursor-pointer"
+            title="Reset Camera View"
+          >
+            ↺ Reset
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1 bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-800 shadow-xl">
+          <span className="text-[10px] font-mono text-slate-500 px-1">Pan View:</span>
+          <button
+            onClick={() => handlePanShift(-1.5, 0)}
+            className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-cyan-300 text-xs font-mono rounded border border-slate-800 cursor-pointer"
+            title="Pan left"
+          >
+            ⬅️
+          </button>
+          <button
+            onClick={() => handlePanShift(1.5, 0)}
+            className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-cyan-300 text-xs font-mono rounded border border-slate-800 cursor-pointer"
+            title="Pan right"
+          >
+            ➡️
+          </button>
+          <button
+            onClick={() => handlePanShift(0, 1.5)}
+            className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-cyan-300 text-xs font-mono rounded border border-slate-800 cursor-pointer"
+            title="Pan up"
+          >
+            ⬆️
+          </button>
+          <button
+            onClick={() => handlePanShift(0, -1.5)}
+            className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-cyan-300 text-xs font-mono rounded border border-slate-800 cursor-pointer"
+            title="Pan down"
+          >
+            ⬇️
+          </button>
+        </div>
+      </div>
+
+      <Canvas camera={{ position: [0, 2, 8], fov: 45, near: 0.1, far: 1000 }} gl={{ antialias: true }}>
+        <AtomScene element={element} controlsRef={controlsRef} dragMode={dragMode} />
       </Canvas>
 
       {/* Label: Educational atomic model */}
       <div className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded border border-slate-800 text-[11px] font-mono text-cyan-400">
         Educational atomic model (Shells: {element.shells?.join(', ') || '1'})
       </div>
-
-      <button
-        onClick={handleResetCamera}
-        className="absolute top-4 right-4 bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-slate-700 backdrop-blur-sm transition flex items-center gap-1.5 shadow z-10"
-        title="Reset Camera View"
-      >
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        Reset Camera
-      </button>
     </div>
   );
 };

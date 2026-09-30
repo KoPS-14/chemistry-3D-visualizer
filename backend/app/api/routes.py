@@ -12,14 +12,22 @@ from app.schemas.models import (
     ElementData,
     ChatRequest,
     ChatResponse,
+    KineticsRequest,
+    KineticsResponse,
+    ElementExplainRequest,
+    ElementExplainResponse,
+    ReactionExplainRequest,
+    ReactionExplainResponse,
 )
 from app.ai.llm_service import LLMService
 from app.chemistry.rdkit_service import RDKitService
 from app.chemistry.lookup_service import LookupService
+from app.chemistry.kinetics import evaluate_educational_conditions
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
 
 
 @router.get("/health")
@@ -56,6 +64,14 @@ def get_element_by_number(atomic_number: int):
     return element
 
 
+@router.post("/kinetics", response_model=KineticsResponse)
+def evaluate_kinetics(payload: KineticsRequest):
+    """Evaluates educational reaction kinetics (temperature, pressure, catalyst, solvent)."""
+    conditions_dict = payload.conditions.model_dump() if payload.conditions else {}
+    result = evaluate_educational_conditions(payload.reaction_type, conditions_dict)
+    return KineticsResponse(**result)
+
+
 @router.post("/chat", response_model=ChatResponse)
 def ask_chemistry_tutor(payload: ChatRequest):
     """AI Chemistry Tutor Chat Endpoint for conceptual Q&A"""
@@ -66,6 +82,54 @@ def ask_chemistry_tutor(payload: ChatRequest):
             detail="Message cannot be empty."
         )
     return LLMService.ask_chemistry_tutor(message, payload.history)
+
+
+@router.post("/explain/element", response_model=ElementExplainResponse)
+def explain_element(payload: ElementExplainRequest):
+    """Generates a detailed AI explanation of a periodic table element."""
+    exp = LLMService.explain_element(
+        name=payload.name,
+        symbol=payload.symbol,
+        atomic_number=payload.atomic_number,
+        group=payload.group,
+        period=payload.period,
+        category=payload.category,
+        electron_configuration=payload.electron_configuration,
+        atomic_mass=payload.atomic_mass,
+        summary=payload.summary or ""
+    )
+    return ElementExplainResponse(
+        status="success",
+        element_name=payload.name,
+        symbol=payload.symbol,
+        atomic_number=payload.atomic_number,
+        explanation=exp
+    )
+
+
+@router.post("/explain/reaction", response_model=ReactionExplainResponse)
+def explain_reaction(payload: ReactionExplainRequest):
+    """Generates an educational AI explanation of a chemical reaction and how conditions interrupt/change it."""
+    conds_dict = payload.conditions.model_dump() if payload.conditions else {}
+    kinetics_res = payload.kinetics
+    if not kinetics_res:
+        kinetics_res = evaluate_educational_conditions(payload.reaction_type, conds_dict)
+
+    exp = LLMService.explain_reaction(
+        name=payload.name,
+        reaction_type=payload.reaction_type,
+        balanced_equation=payload.balanced_equation,
+        conditions=conds_dict,
+        kinetics=kinetics_res,
+        is_interrupted=payload.is_interrupted or False
+    )
+    return ReactionExplainResponse(
+        status="success",
+        reaction_name=payload.name,
+        reaction_type=payload.reaction_type,
+        explanation=exp,
+        is_interrupted=payload.is_interrupted or False
+    )
 
 
 @router.post("/visualize", response_model=VisualizeResponse)

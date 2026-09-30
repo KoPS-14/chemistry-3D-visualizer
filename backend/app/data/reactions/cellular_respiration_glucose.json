@@ -1,0 +1,32 @@
+{
+  "reaction_id": "cellular_respiration_glucose",
+  "name": "Cellular Respiration: Glucose Complete Oxidation",
+  "reaction_type": "COMBUSTION",
+  "description": "High-enthalpy aerobic metabolic oxidation of glucose with oxygen yielding carbon dioxide, water, and ATP energy.",
+  "balanced_equation": "C6H12O6 + 6 O2 -> 6 CO2 + 6 H2O",
+  "reactants": [
+    {
+      "name": "D-Glucose",
+      "smiles": "C(C1C(C(C(C(O1)O)O)O)O)O"
+    },
+    {
+      "name": "Dioxygen Gas",
+      "smiles": "O=O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Carbon Dioxide",
+      "smiles": "O=C=O"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "1. Glycolytic Cleavage & Oxidation",
+    "2. High-Energy Intermediate Fragmentation",
+    "3. CO2 and Water Release"
+  ]
+}

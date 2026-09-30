@@ -1,0 +1,28 @@
+{
+  "reaction_id": "ethylene_epoxidation",
+  "name": "Catalytic Epoxidation of Ethylene",
+  "reaction_type": "ADDITION",
+  "description": "Heterogeneous silver-catalyzed oxidation of ethylene by oxygen to form oxirane (ethylene oxide) with a high-strain 3-membered ring.",
+  "balanced_equation": "C2H4 + 0.5 O2 -> C2H4O",
+  "reactants": [
+    {
+      "name": "Ethylene",
+      "smiles": "C=C"
+    },
+    {
+      "name": "Dioxygen",
+      "smiles": "O=O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Ethylene Oxide (Oxirane)",
+      "smiles": "C1CO1"
+    }
+  ],
+  "stages": [
+    "1. Silver Surface Coordination",
+    "2. Concerted Oxygen Addition to Pi-Bond",
+    "3. 3-Membered Oxirane Ring Formation"
+  ]
+}

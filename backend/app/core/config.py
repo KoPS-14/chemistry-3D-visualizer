@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     LLM_API_KEY: str = ""
     LLM_PROVIDER: str = "gemini"
-    LLM_MODEL: str = "gemini-1.5-flash"
+    LLM_MODEL: str = "gemini-3.6-flash"
 
     BASE_DIR: Path = Path(__file__).resolve().parent.parent
     DATA_DIR: Path = Path(__file__).resolve().parent.parent / "data"

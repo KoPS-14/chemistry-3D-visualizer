@@ -1,0 +1,32 @@
+{
+  "reaction_id": "aldol_condensation_acetaldehyde",
+  "name": "Aldol Condensation of Acetaldehyde",
+  "reaction_type": "CONDENSATION",
+  "description": "Base-catalyzed nucleophilic addition of acetaldehyde enolate to a carbonyl group followed by dehydration to yield crotonaldehyde and water.",
+  "balanced_equation": "2 CH3CHO -> CH3CH=CHCHO + H2O",
+  "reactants": [
+    {
+      "name": "Acetaldehyde (Enolate Donor)",
+      "smiles": "CC=O"
+    },
+    {
+      "name": "Acetaldehyde (Electrophile)",
+      "smiles": "CC=O"
+    }
+  ],
+  "products": [
+    {
+      "name": "Crotonaldehyde",
+      "smiles": "CC=CC=O"
+    },
+    {
+      "name": "Water",
+      "smiles": "O"
+    }
+  ],
+  "stages": [
+    "1. Enolate Nucleophilic Attack on Carbonyl",
+    "2. Beta-Hydroxy Aldol Intermediate",
+    "3. Dehydration to Conjugated Enal"
+  ]
+}

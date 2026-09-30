@@ -33,10 +33,25 @@ dist/
 
 # Environment variables
 .env
-.env.local
+.env.*
+*.env
+
+# Large Model Weights (exceeds GitHub 100MB limit)
+*.gguf
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.onnx
+
+# Logs & temp
+*.log
+scratch/
+test_*.txt
 
 # IDE / OS
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+
