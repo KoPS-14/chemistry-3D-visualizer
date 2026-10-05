@@ -216,8 +216,9 @@ class LLMService:
             f"### 🌍 Real-World & Industrial Uses\n"
             f"### 💡 Key Chemical Insight"
         )
+        provider = settings.LLM_PROVIDER.lower()
         api_key = settings.active_api_key
-        if api_key:
+        if api_key and provider != "ollama":
             res = LLMService.ask_chemistry_tutor(prompt)
             if res.status == "success" and res.answer and "GEMINI_API_KEY" not in res.answer:
                 return res.answer
@@ -273,8 +274,9 @@ class LLMService:
             f"### 🎛️ Condition Impact & Interruption Effects\n"
             f"### 🏭 Industrial & Practical Applications"
         )
+        provider = settings.LLM_PROVIDER.lower()
         api_key = settings.active_api_key
-        if api_key:
+        if api_key and provider != "ollama":
             res = LLMService.ask_chemistry_tutor(prompt)
             if res.status == "success" and res.answer and "GEMINI_API_KEY" not in res.answer:
                 return res.answer
@@ -297,6 +299,44 @@ class LLMService:
             f"Controlling temperature, pressure, and catalyst interruption allows chemists to optimize reaction speed and product purity."
         )
 
+
+    @staticmethod
+    def _call_ollama_chat(message: str, history: List[ChatMessage]) -> ChatResponse:
+        url = "http://localhost:11434/api/chat"
+        # Use an explicit normal-chat system prompt to override JSON overfit
+        sys_prompt = "You are an expert Chemistry Tutor. Answer the user's question clearly in conversational English using markdown. Do NOT output JSON."
+        messages_payload = [{"role": "system", "content": sys_prompt}]
+        for msg in history[-10:]:
+            role = "user" if msg.role in ("user", "human") else "assistant"
+            messages_payload.append({"role": role, "content": msg.content})
+        messages_payload.append({"role": "user", "content": message})
+
+        model = settings.LLM_MODEL if settings.LLM_MODEL and not settings.LLM_MODEL.startswith("gemini") else "llama3"
+
+        payload = {
+            "model": model,
+            "messages": messages_payload,
+            "stream": False,
+            "options": {
+                "temperature": 0.2,
+                "num_thread": 2
+            }
+        }
+        try:
+            response = _http_client.post(url, json=payload, timeout=120.0)
+            if response.status_code == 200:
+                data = response.json()
+                answer_text = data.get("message", {}).get("content", "")
+                cleaned_text = clean_latex_artifacts(answer_text)
+                return ChatResponse(status="success", answer=cleaned_text, reply=cleaned_text)
+            return ChatResponse(
+                status="error",
+                answer=f"⚠️ Ollama API returned status code {response.status_code}.",
+                reply=f"⚠️ Ollama API returned status code {response.status_code}.",
+                error=response.text
+            )
+        except Exception as e:
+            return ChatResponse(status="error", answer=f"⚠️ Failed to connect to local Ollama on port 11434. ({e})", reply=str(e), error=str(e))
 
     @staticmethod
     def _call_gemini_chat(message: str, history: List[ChatMessage], api_key: str) -> ChatResponse:

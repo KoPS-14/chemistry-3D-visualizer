@@ -71,6 +71,7 @@ export const App: React.FC = () => {
   const [explanation, setExplanation] = useState<string | null>(null);
   const [wireframe, setWireframe] = useState<boolean>(false);
   const [backendConnected, setBackendConnected] = useState<boolean | null>(null);
+  const [pendingChatQuestion, setPendingChatQuestion] = useState<string | null>(null);
 
   // Initial load: fetch elements and check health
   useEffect(() => {
@@ -295,7 +296,8 @@ export const App: React.FC = () => {
                 element={selectedElement}
                 aiExplanation={elementExplanation}
                 isLoadingAI={isLoadingElementExp}
-                onSelectFollowUp={() => {
+                onSelectFollowUp={(q) => {
+                  setPendingChatQuestion(q);
                   setActiveTab('chat');
                 }}
               />
@@ -353,7 +355,10 @@ export const App: React.FC = () => {
                         `What are the chemical properties and dipole moment of ${molecule.name}?`,
                         `Explain the synthesis route for ${molecule.name}.`,
                       ]}
-                      onSelectFollowUp={() => setActiveTab('chat')}
+                      onSelectFollowUp={(q) => {
+                        setPendingChatQuestion(q);
+                        setActiveTab('chat');
+                      }}
                     />
                   </section>
                 )}
@@ -458,7 +463,10 @@ export const App: React.FC = () => {
                         `How does changing catalyst to acid/base alter the transition state of ${reaction.name}?`,
                         `Explain the stereochemistry inversion at step 2.`,
                       ]}
-                      onSelectFollowUp={() => setActiveTab('chat')}
+                      onSelectFollowUp={(q) => {
+                        setPendingChatQuestion(q);
+                        setActiveTab('chat');
+                      }}
                     />
                   </section>
                 )}
@@ -485,6 +493,8 @@ export const App: React.FC = () => {
           <section className="w-full">
             <ChemistryChatbotView
               onNavigateAndVisualize={handleNavigateAndVisualize}
+              initialPrompt={pendingChatQuestion}
+              onPromptHandled={() => setPendingChatQuestion(null)}
             />
           </section>
         )}

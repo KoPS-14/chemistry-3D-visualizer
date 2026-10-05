@@ -13,6 +13,8 @@ export interface ChatMessageItem {
 
 interface ChemistryChatbotViewProps {
   onNavigateAndVisualize?: (targetTab: NavTab, promptOrSearch: string) => void;
+  initialPrompt?: string | null;
+  onPromptHandled?: () => void;
 }
 
 const STARTER_PROMPTS = [
@@ -133,6 +135,8 @@ const detectVisualizationSuggestion = (text: string): SuggestionItem | null => {
 
 export const ChemistryChatbotView: React.FC<ChemistryChatbotViewProps> = ({
   onNavigateAndVisualize,
+  initialPrompt,
+  onPromptHandled
 }) => {
   const [messages, setMessages] = useState<ChatMessageItem[]>(() => {
     const saved = sessionStorage.getItem('chemAiChatHistory');
@@ -148,6 +152,8 @@ export const ChemistryChatbotView: React.FC<ChemistryChatbotViewProps> = ({
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  const hasHandledPrompt = useRef<string | null>(null);
+
   // Auto-scroll to bottom of conversation
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -160,6 +166,18 @@ export const ChemistryChatbotView: React.FC<ChemistryChatbotViewProps> = ({
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`;
     }
   }, [inputMessage]);
+
+  // Handle incoming follow-up prompts
+  useEffect(() => {
+    if (initialPrompt && initialPrompt !== hasHandledPrompt.current && !isLoading) {
+      hasHandledPrompt.current = initialPrompt;
+      handleSend(initialPrompt);
+      if (onPromptHandled) {
+        // Delay clearing the state slightly so React doesn't interrupt the render
+        setTimeout(() => onPromptHandled(), 50);
+      }
+    }
+  }, [initialPrompt, isLoading]);
 
   const handleSend = async (textOverride?: string) => {
     const text = (textOverride || inputMessage).trim();
