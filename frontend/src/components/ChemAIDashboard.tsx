@@ -36,19 +36,35 @@ export const ChemAIDashboard: React.FC<ChemAIDashboardProps> = ({
       badge: 'Kinetics Engine',
     },
     {
+      tab: 'custom-lab' as NavTab,
+      title: 'Custom Reaction Lab',
+      icon: '⚗️',
+      description: 'Input any 2+ reactant molecules to test supported reaction SMARTS rules with atom-mapped 3D transformations.',
+      gradient: 'from-teal-600/30 to-emerald-600/30 border-teal-500/40 text-teal-300',
+      badge: 'RDKit Rule Engine',
+    },
+    {
+      tab: 'quiz' as NavTab,
+      title: 'JEE Chemistry Quiz',
+      icon: '📝',
+      description: 'Prepare for JEE Advanced with past 4 years chemistry questions, step-by-step hints, and 3D visual mechanisms.',
+      gradient: 'from-rose-600/30 to-pink-600/30 border-rose-500/40 text-rose-300',
+      badge: 'JEE 2022–2025',
+    },
+    {
       tab: 'chat' as NavTab,
       title: 'AI Chemistry Tutor',
       icon: '🤖',
-      description: 'Chat with ChemAI Qwen for mechanism walkthroughs, physical chemistry calculations, and instant 3D model triggers.',
+      description: 'Chat with ChemAI for mechanism walkthroughs, physical chemistry calculations, and instant 3D model triggers.',
       gradient: 'from-purple-600/30 to-indigo-600/30 border-purple-500/40 text-purple-300',
-      badge: 'ChemAI Qwen',
+      badge: 'ChemAI Tutor',
     },
   ];
 
   const quickShowcases = [
     {
       name: 'SN2 Nucleophilic Substitution',
-      type: 'reaction' as NavTab,
+      type: 'reactions' as NavTab,
       prompt: 'Show SN2 reaction of methyl bromide with hydroxide',
       icon: '🔥',
       tag: 'Reaction Mechanism',

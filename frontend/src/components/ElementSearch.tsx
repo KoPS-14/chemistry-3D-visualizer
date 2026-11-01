@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { ElementData } from '../types/reaction';
 
 interface ElementSearchProps {
@@ -9,6 +9,17 @@ interface ElementSearchProps {
 export const ElementSearch: React.FC<ElementSearchProps> = ({ elements, onSelectElement }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const filtered = useMemo(() => {
     if (!searchTerm.trim()) return [];
@@ -28,7 +39,7 @@ export const ElementSearch: React.FC<ElementSearchProps> = ({ elements, onSelect
   };
 
   return (
-    <div className="relative w-full max-w-md">
+    <div ref={containerRef} className="relative w-full max-w-md">
       <div className="relative">
         <input
           type="text"

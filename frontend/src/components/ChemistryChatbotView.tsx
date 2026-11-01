@@ -39,6 +39,24 @@ const STARTER_PROMPTS = [
 const detectVisualizationSuggestion = (text: string): SuggestionItem | null => {
   const lower = text.toLowerCase();
 
+  if (lower.includes('jee') || lower.includes('exam') || lower.includes('quiz')) {
+    return {
+      targetTab: 'quiz',
+      promptOrSearch: '',
+      name: 'JEE Chemistry Quiz & 3D Tutor',
+      type: 'reaction',
+      details: 'Authentic 2022–2025 JEE questions with progressive hints & 3D mechanisms',
+    };
+  }
+  if (lower.includes('custom') || lower.includes('esterification') || lower.includes('fischer')) {
+    return {
+      targetTab: 'custom-lab',
+      promptOrSearch: 'acetic acid + ethanol',
+      name: 'Custom Reaction Lab',
+      type: 'reaction',
+      details: 'RDKit SMARTS reaction rule engine with mapped 3D transformations',
+    };
+  }
   if (lower.includes('sn2') || lower.includes('substitution') || lower.includes('methyl bromide')) {
     return {
       targetTab: 'reactions',

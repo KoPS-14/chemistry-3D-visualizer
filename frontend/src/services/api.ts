@@ -1,5 +1,15 @@
 import axios from 'axios';
-import type { VisualizeResponse, ElementData, ReactionConditions, KineticsEvaluationResult } from '../types/reaction';
+import type {
+  VisualizeResponse,
+  ElementData,
+  ReactionConditions,
+  KineticsEvaluationResult,
+  CustomReactionRequest,
+  CustomReactionResponse,
+  QuizFilterResponse,
+  QuizHintResponse,
+  Teach3DResponse,
+} from '../types/reaction';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -173,6 +183,82 @@ export const fetchReactionExplanation = async (
     `Modulating temperature, pressure, and catalyst presence enables precise control over reaction rate, transition state lifetime, and chemical yield.`
   ].join('\n');
 };
+
+export const executeCustomReaction = async (
+  payload: CustomReactionRequest
+): Promise<CustomReactionResponse> => {
+  try {
+    const res = await apiClient.post<CustomReactionResponse>('/custom-reaction', payload);
+    return res.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        return {
+          status: 'lookup_failure',
+          message: 'Backend server timed out while evaluating custom reaction.',
+        };
+      }
+      return {
+        status: 'lookup_failure',
+        message: error.response?.data?.detail || 'Network error executing custom reaction.',
+      };
+    }
+    return {
+      status: 'lookup_failure',
+      message: 'Unexpected error executing custom reaction.',
+    };
+  }
+};
+
+export const fetchQuizQuestions = async (
+  year?: number,
+  category?: string
+): Promise<QuizFilterResponse> => {
+  try {
+    const params: Record<string, any> = {};
+    if (year) params.year = year;
+    if (category && category !== 'All') params.category = category;
+    const res = await apiClient.get<QuizFilterResponse>('/quiz/questions', { params });
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch quiz questions:', error);
+    return {
+      total: 0,
+      available_years: [],
+      available_categories: [],
+      questions: [],
+    };
+  }
+};
+
+export const fetchQuizHint = async (
+  questionId: string,
+  step: number
+): Promise<QuizHintResponse | null> => {
+  try {
+    const res = await apiClient.get<QuizHintResponse>(`/quiz/hint/${questionId}`, {
+      params: { step },
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch hint:', error);
+    return null;
+  }
+};
+
+export const fetchTeach3D = async (
+  questionId: string
+): Promise<Teach3DResponse | null> => {
+  try {
+    const res = await apiClient.get<Teach3DResponse>(`/quiz/teach-3d/${questionId}`);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch 3D teaching model:', error);
+    return null;
+  }
+};
+
+
 
 
 

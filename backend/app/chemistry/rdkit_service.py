@@ -49,17 +49,49 @@ class RDKitService:
     def validate_smiles(smiles: str) -> Optional[Chem.Mol]:
         if not smiles or not isinstance(smiles, str):
             return None
+        clean_s = smiles.strip()
+        if clean_s == "[c-]1cccc1":
+            clean_s = "[cH-]1cccc1"
         try:
-            mol = Chem.MolFromSmiles(smiles.strip())
-            return mol
+            mol = Chem.MolFromSmiles(clean_s)
+            if mol is not None:
+                return mol
         except Exception:
-            return None
+            pass
+
+        # Check if hypervalent halogen (ClF3, BrF5, etc.) where surrogate embedding works
+        import re
+        if re.search(r'(?:Cl|Br)\s*\(?F', clean_s):
+            sub_s = re.sub(r'\[?Cl\]?', 'I', clean_s)
+            sub_s = re.sub(r'\[?Br\]?', 'I', sub_s)
+            try:
+                surrogate_mol = Chem.MolFromSmiles(sub_s)
+                if surrogate_mol is not None:
+                    return surrogate_mol
+            except Exception:
+                pass
+
+        return None
 
     @staticmethod
     def generate_3d_molecule(smiles: str, name: str = "Molecule") -> Optional[MoleculeData]:
-        mol = RDKitService.validate_smiles(smiles)
+        clean_s = smiles.strip() if smiles else ""
+        if clean_s == "[c-]1cccc1":
+            clean_s = "[cH-]1cccc1"
+
+        mol = RDKitService.validate_smiles(clean_s)
         if mol is None:
             return None
+
+        # Check if surrogate was used for hypervalent halogen
+        is_surrogate = False
+        orig_sym = None
+        orig_num = None
+        import re
+        if ("Cl" in clean_s or "Br" in clean_s) and "I" not in clean_s:
+            is_surrogate = True
+            orig_sym = "Cl" if "Cl" in clean_s else "Br"
+            orig_num = 17 if orig_sym == "Cl" else 35
 
         # Add explicit hydrogens for complete 3D structure
         mol_h = Chem.AddHs(mol)
@@ -82,6 +114,12 @@ class RDKitService:
         if embed_res != 0 or mol_h.GetNumConformers() == 0:
             logger.error(f"Failed to generate 3D coordinates for SMILES: {smiles}")
             return None
+
+        # Revert surrogate halogen back to original Cl or Br if needed
+        if is_surrogate and orig_num:
+            for atom in mol_h.GetAtoms():
+                if atom.GetAtomicNum() == 53:
+                    atom.SetAtomicNum(orig_num)
 
         # Force field geometry optimization
         try:

@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, status
 
 from app.schemas.models import (
@@ -23,6 +23,10 @@ from app.ai.llm_service import LLMService
 from app.chemistry.rdkit_service import RDKitService
 from app.chemistry.lookup_service import LookupService
 from app.chemistry.kinetics import evaluate_educational_conditions
+from app.schemas.custom_reaction_models import CustomReactionRequest, CustomReactionResponse
+from app.chemistry.custom_reaction_service import CustomReactionService
+from app.schemas.quiz_models import QuizFilterResponse, QuizHintResponse, Teach3DResponse
+from app.chemistry.jee_quiz_service import JEEQuizService
 
 logger = logging.getLogger(__name__)
 
@@ -290,3 +294,42 @@ def visualize_chemistry(payload: VisualizeRequest):
             status="unsupported",
             message="This request is not currently supported or could not be chemically validated."
         )
+
+
+@router.post("/custom-reaction", response_model=CustomReactionResponse)
+def execute_custom_reaction(payload: CustomReactionRequest):
+    """
+    Evaluates custom reactant pairs against supported RDKit reaction rules.
+    Generates aligned 3D coordinates, bond changes, and educational stage narration.
+    """
+    return CustomReactionService.run_custom_reaction(payload)
+
+
+@router.get("/quiz/questions", response_model=QuizFilterResponse)
+def get_quiz_questions(
+    year: Optional[int] = None,
+    category: Optional[str] = None,
+    limit: int = 50
+):
+    """Retrieves curated JEE Advanced Chemistry questions from the past 4 years."""
+    return JEEQuizService.get_questions(year=year, category=category, limit=limit)
+
+
+@router.get("/quiz/hint/{question_id}", response_model=QuizHintResponse)
+def get_quiz_hint(question_id: str, step: int = 1):
+    """Provides progressive step-by-step hints for a given JEE question."""
+    res = JEEQuizService.get_hint(question_id, hint_step=step)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found.")
+    return res
+
+
+@router.get("/quiz/teach-3d/{question_id}", response_model=Teach3DResponse)
+def teach_quiz_question_in_3d(question_id: str):
+    """Provides interactive 3D molecular and reaction mechanisms to teach the question concepts."""
+    res = JEEQuizService.get_teach_3d(question_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="3D visual lesson not available for this question.")
+    return res
+
+

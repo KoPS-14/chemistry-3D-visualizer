@@ -1,0 +1,413 @@
+[
+  {
+    "id": "jee_2025_p1_q1",
+    "year": 2025,
+    "paper": "Paper 1",
+    "category": "Inorganic Chemistry",
+    "topic": "Thermal Decomposition of Ammonium Salts",
+    "difficulty": "Moderate",
+    "question": "The heating of ammonium nitrite (NH4NO2) at 60-70 °C and ammonium nitrate (NH4NO3) at 200-250 °C produces nitrogen-containing gases X and Y, respectively. What are X and Y, and what are their respective oxidation states of nitrogen?",
+    "options": [
+      "(A) X = N2 (0) and Y = N2O (+1)",
+      "(B) X = NO (+2) and Y = NO2 (+4)",
+      "(C) X = N2O (+1) and Y = N2 (0)",
+      "(D) X = NH3 (-3) and Y = NO2 (+4)"
+    ],
+    "correct_option": "A",
+    "hints": [
+      "Hint 1 (Core Concept): Ammonium salts containing oxidizing anions (like NO2- and NO3-) undergo internal redox (comproportionation) rather than simple thermal dissociation into ammonia gas.",
+      "Hint 2 (Mechanism): In NH4NO2, N(-3) from ammonium and N(+3) from nitrite comproportionate to produce stable elemental dinitrogen gas (N2) and water.",
+      "Hint 3 (Deduction): In NH4NO3, N(-3) and N(+5) comproportionate into nitrous oxide (N2O, laughing gas) where average oxidation state is +1. Hence X = N2 (0) and Y = N2O (+1)."
+    ],
+    "explanation": "Upon mild heating (60-70 °C), ammonium nitrite decomposes via internal redox:\nNH4NO2 -> N2(g) + 2H2O\nHere nitrogen in NH4+ (-3) and NO2- (+3) comproportionate to N2 (oxidation state 0).\n\nUpon heating at 200-250 °C, ammonium nitrate undergoes comproportionation:\nNH4NO3 -> N2O(g) + 2H2O\nHere nitrogen in NH4+ (-3) and NO3- (+5) comproportionate to N2O (average oxidation state +1).\nTherefore, X = N2 (0) and Y = N2O (+1).",
+    "teach_3d": {
+      "title": "3D Molecular Geometry: N2 and N2O Decomposition Products",
+      "reaction_type": "DECOMPOSITION",
+      "reactants": [
+        {"name": "Ammonium Nitrite", "smiles": "[NH4+].[O-]N=O"},
+        {"name": "Ammonium Nitrate", "smiles": "[NH4+].[O-][N+](=O)[O-]"}
+      ],
+      "products": [
+        {"name": "Dinitrogen (N2)", "smiles": "N#N"},
+        {"name": "Nitrous Oxide (N2O)", "smiles": "[N-]=[N+]=O"}
+      ],
+      "stages": [
+        "1. Ionic Assembly: NH4+ proton transfers to the oxygen of oxyanion.",
+        "2. Comproportionation: Electrons transfer from -3 nitrogen to oxidized nitrogen center.",
+        "3. Bond Reorganization: Formation of stable triple bond in N2 (bond length 1.09 Å) and resonance-stabilized linear N=N=O.",
+        "4. Water Evolution: Hydrogen and oxygen atoms condense into stable water molecules."
+      ],
+      "spatial_insight": "Dinitrogen (N#N) possesses a short, ultra-strong triple bond (945 kJ/mol) with sp hybridization. Nitrous oxide ([N-]=[N+]=O) is strictly linear (180°) with delocalized pi electrons across all three centers."
+    }
+  },
+  {
+    "id": "jee_2025_p1_q4",
+    "year": 2025,
+    "paper": "Paper 1",
+    "category": "Organic Chemistry",
+    "topic": "Aromaticity & Hydrocarbon C-H Acidity",
+    "difficulty": "Moderate",
+    "question": "Consider the following hydrocarbons. Which of them has the MOST acidic hydrogen (lowest pKa)?",
+    "options": [
+      "(A) Cyclopentadiene (C5H6)",
+      "(B) Propene (CH3-CH=CH2, allylic hydrogen)",
+      "(C) Propyne (CH3-C≡CH, terminal alkynyl hydrogen)",
+      "(D) Cycloheptatriene (C7H8)"
+    ],
+    "correct_option": "A",
+    "hints": [
+      "Hint 1 (Concept): Acidity of a C-H bond is directly proportional to the thermodynamic stability of its conjugate base (carbanion).",
+      "Hint 2 (Aromaticity): Check whether deprotonation transforms an antiaromatic or non-aromatic molecule into a Hückel (4n + 2) aromatic system.",
+      "Hint 3 (Deduction): Deprotonating cyclopentadiene removes a proton from sp3 CH2, leaving a planar cyclopentadienyl anion with 6 pi electrons (n=1). This aromatic stabilization gives it an exceptionally low pKa of ~16 (more acidic than water/ethanol), whereas propyne pKa is ~25 and cycloheptatriene forms an antiaromatic 8 pi anion."
+    ],
+    "explanation": "Cyclopentadiene (pKa ≈ 16) is uniquely acidic for a hydrocarbon. When the sp3 carbon loses a proton, the resulting cyclopentadienyl carbanion has 6 pi electrons (4 from two double bonds + 2 from the carbanion lone pair) in a planar, conjugated 5-membered cyclic ring. According to Hückel's rule (4n + 2 with n = 1), this anion is extraordinarily stabilized by aromaticity.\n\nIn comparison:\n- Terminal alkyne (propyne): pKa ≈ 25 (sp C-H).\n- Allylic hydrogen (propene): pKa ≈ 43 (resonance only, non-aromatic).\n- Cycloheptatriene: deprotonation yields an 8 pi electron system which is anti-aromatic/non-aromatic (pKa ≈ 36).\nHence, Cyclopentadiene is by far the most acidic.",
+    "teach_3d": {
+      "title": "3D Deprotonation & Aromatic Ring Stabilization",
+      "reaction_type": "ACID_BASE",
+      "reactants": [
+        {"name": "Cyclopentadiene", "smiles": "C1C=CC=C1"},
+        {"name": "Hydroxide Base", "smiles": "[OH-]"}
+      ],
+      "products": [
+        {"name": "Cyclopentadienyl Anion (Aromatic)", "smiles": "[cH-]1cccc1"},
+        {"name": "Water", "smiles": "O"}
+      ],
+      "stages": [
+        "1. Base Approach: Hydroxide approaches the out-of-plane sp3 C-H proton of cyclopentadiene.",
+        "2. Proton Transfer: Base pulls H+, leaving a localized negative charge on carbon.",
+        "3. Planarization: The tetrahedral sp3 carbon rehybridizes to sp2, flattening the entire 5-membered ring into a planar polygon.",
+        "4. Aromatic Delocalization: The lone pair enters the cyclic pi manifold, establishing a continuous 6 pi aromatic sextet."
+      ],
+      "spatial_insight": "Notice how the tetrahedral puckered sp3 carbon flattens to 120° planar sp2 geometry in 3D. This alignment enables all five parallel p-orbitals to overlap, maximizing Hückel resonance stabilization."
+    }
+  },
+  {
+    "id": "jee_2025_p2_q2",
+    "year": 2025,
+    "paper": "Paper 2",
+    "category": "Inorganic Chemistry",
+    "topic": "Interhalogen Hydrolysis & VSEPR Geometries",
+    "difficulty": "Challenging",
+    "question": "The complete hydrolysis of iodine monochloride (ICl), chlorine trifluoride (ClF3), and bromine pentafluoride (BrF5), respectively, produces which halogen oxyacids/halides?",
+    "options": [
+      "(A) ICl -> HCl + HOI; ClF3 -> 3HF + HClO2; BrF5 -> 5HF + HBrO3",
+      "(B) ICl -> HI + HOCl; ClF3 -> 3HF + HClO3; BrF5 -> 5HF + HBrO4",
+      "(C) ICl -> HCl + HIO3; ClF3 -> 3HF + HCl; BrF5 -> 5HF + HBrO",
+      "(D) ICl -> HI + HOCl; ClF3 -> 3HF + HClO; BrF5 -> 5HF + HBr"
+    ],
+    "correct_option": "A",
+    "hints": [
+      "Hint 1 (Concept): In interhalogen compounds XX'_n, the more electronegative halogen atom (X') acts as the anion (-1 oxidation state) and forms halide (HF, HCl), while the less electronegative central halogen (X) retains its oxidation state in an oxyacid.",
+      "Hint 2 (Oxidation States): In ICl, Iodine is +1; in ClF3, Chlorine is +3; in BrF5, Bromine is +5.",
+      "Hint 3 (Deduction): Complete hydrolysis preserves central halogen oxidation state without redox: Iodine(+1) gives hypoiodous acid (HOI/HIO); Chlorine(+3) gives chlorous acid (HClO2); Bromine(+5) gives bromic acid (HBrO3)."
+    ],
+    "explanation": "Hydrolysis of interhalogens is a non-redox nucleophilic substitution where water attacks the positive central halogen:\n1. ICl: I is +1, Cl is -1.\n   ICl + H2O -> HCl + HOI (hypoiodous acid)\n2. ClF3: Cl is +3, F is -1.\n   ClF3 + 2H2O -> 3HF + HClO2 (chlorous acid)\n3. BrF5: Br is +5, F is -1.\n   BrF5 + 3H2O -> 5HF + HBrO3 (bromic acid)\n\nTherefore, the correct product sequence is HCl + HOI, 3HF + HClO2, and 5HF + HBrO3.",
+    "teach_3d": {
+      "title": "3D VSEPR Structure: ClF3 (T-Shaped) and BrF5 (Square Pyramidal)",
+      "reaction_type": "HYDROLYSIS",
+      "reactants": [
+        {"name": "Chlorine Trifluoride (ClF3)", "smiles": "FCl(F)F"},
+        {"name": "Water", "smiles": "O"}
+      ],
+      "products": [
+        {"name": "Hydrogen Fluoride", "smiles": "F"},
+        {"name": "Chlorous Acid (HClO2)", "smiles": "O=ClO"}
+      ],
+      "stages": [
+        "1. VSEPR Ground State: ClF3 adopts a trigonal bipyramidal electron geometry with 2 equatorial lone pairs, creating a bent T-shape (bond angle 87.5°).",
+        "2. Nucleophilic Attack: Water oxygen lone pair attacks the electropositive Cl(+3) axial position.",
+        "3. Fluoride Cleavage: Fluoride departs, abstracting a proton to form HF.",
+        "4. Hydrolysis Completion: Second water molecule attacks to yield stable bent chlorous acid (O=Cl-OH)."
+      ],
+      "spatial_insight": "In ClF3, the two bulky lone pairs occupy equatorial positions to minimize 90° lone pair - bond pair repulsion. Repulsion from equatorial lone pairs bends axial F-Cl-F bonds inward from 180° to 175°."
+    }
+  },
+  {
+    "id": "jee_2024_p1_q6",
+    "year": 2024,
+    "paper": "Paper 1",
+    "category": "Organic Chemistry",
+    "topic": "Cumene Process, Haloform Reaction & Carbonyls",
+    "difficulty": "Advanced",
+    "question": "Reaction of iso-propylbenzene (cumene) with O2 followed by treatment with dilute H3O+ forms phenol and a by-product P. Reaction of P with 3 equivalents of Cl2 in the presence of Ca(OH)2 produces compound R and calcium salt S. Which of the following statement(s) is/are CORRECT?",
+    "options": [
+      "(A) Compound P is acetone, and R is chloroform (CHCl3)",
+      "(B) Reaction of R with O2 in the presence of light gives toxic phosgene gas (COCl2)",
+      "(C) Calcium salt S on dry heating regenerates compound P (acetone)",
+      "(D) All of the above (A, B, and C) are correct"
+    ],
+    "correct_option": "D",
+    "hints": [
+      "Hint 1 (Cumene Mechanism): Industrial synthesis of phenol from cumene produces acetone as by-product P.",
+      "Hint 2 (Haloform Step): Acetone has a CH3-C=O methyl ketone group, which undergoes the haloform reaction with Cl2/Ca(OH)2 to produce chloroform (R = CHCl3) and calcium acetate (S).",
+      "Hint 3 (Deduction): Chloroform oxidizes in air/light to poisonous phosgene (COCl2). Calcium acetate (CH3COO)2Ca upon dry distillation pyrolyzes to yield acetone + CaCO3. Thus statements A, B, and C are all valid."
+    ],
+    "explanation": "Step 1: Industrial Cumene Process:\nCumene (isopropylbenzene) is aerially oxidized to cumene hydroperoxide. Acidic cleavage (H3O+) rearranges it into Phenol + Acetone (P = CH3COCH3).\n\nStep 2: Haloform Reaction:\nAcetone reacts with Cl2 and Ca(OH)2:\n2CH3COCH3 + 6Cl2 + 4Ca(OH)2 -> 2CHCl3 (R = chloroform) + (CH3COO)2Ca (S = calcium acetate) + 3CaCl2 + 6H2O.\n\nStep 3: Properties of Products:\n- R is CHCl3 (chloroform). In sunlight and air, 2CHCl3 + O2 -> 2COCl2 (phosgene) + 2HCl. (Statement B is correct)\n- Dry heating of calcium acetate: (CH3COO)2Ca -> CH3COCH3 (acetone P) + CaCO3. (Statement C is correct)\nHence, option (D) is the correct comprehensive answer.",
+    "teach_3d": {
+      "title": "3D Mechanism: Cumene Hydroperoxide Hock Rearrangement",
+      "reaction_type": "REARRANGEMENT",
+      "reactants": [
+        {"name": "Cumene Hydroperoxide", "smiles": "CC(C)(c1ccccc1)OO"},
+        {"name": "Hydronium Catalyst", "smiles": "[OH3+]"}
+      ],
+      "products": [
+        {"name": "Phenol", "smiles": "c1ccccc1O"},
+        {"name": "Acetone", "smiles": "CC(=O)C"}
+      ],
+      "stages": [
+        "1. Protonation: Acid catalyst protonates terminal hydroxyl of hydroperoxide to form leaving water group.",
+        "2. Phenyl Migration: The phenyl ring migrates from benzylic carbon to oxygen simultaneously as H2O departs (1,2-aryl shift).",
+        "3. Oxocarbenium Intermediate: Carbocation formed at benzylic carbon is captured by water.",
+        "4. Hemiketal Cleavage: Hemiketal decomposes into planar Phenol and trigonal planar Acetone (C=O bond)."
+      ],
+      "spatial_insight": "Observe how the bulky phenyl ring flips 180° into the adjacent oxygen p-orbital while water departs from the backside, ensuring complete orbital conservation."
+    }
+  },
+  {
+    "id": "jee_2024_p1_q4",
+    "year": 2024,
+    "paper": "Paper 1",
+    "category": "Inorganic Chemistry",
+    "topic": "Coordination Chemistry: Geometrical & Ionization Isomers",
+    "difficulty": "Moderate",
+    "question": "Select the option in which each complex in Set-I shows geometrical isomerism (cis/trans) and the two complexes in Set-II are ionization isomers of each other. [en = ethylenediamine, H2NCH2CH2NH2]",
+    "options": [
+      "(A) Set-I: [Co(en)(NH3)2Cl2]+ and [PdCl2(PPh3)2]; Set-II: [Co(NH3)5Cl]SO4 and [Co(NH3)5(SO4)]Cl",
+      "(B) Set-I: [Ni(CO)4] and [PdCl2(PPh3)2]; Set-II: [Co(NH3)5Cl]SO4 and [Co(NH3)5(SO4)]Cl",
+      "(C) Set-I: [Co(NH3)3(NO2)3] and [Ni(CO)4]; Set-II: [Co(NH3)6][Cr(CN)6] and [Cr(NH3)6][Co(CN)6]",
+      "(D) Set-I: [PdCl2(PPh3)2] and [Pt(NH3)3Cl]+; Set-II: [Co(NH3)5Br]SO4 and [Co(NH3)5(SO4)]Br"
+    ],
+    "correct_option": "A",
+    "hints": [
+      "Hint 1 (Geometrical Isomerism): Tetrahedral complexes like [Ni(CO)4] (sp3) NEVER show geometrical isomerism because all four ligand positions are equidistant and adjacent (109.5°).",
+      "Hint 2 (Square Planar & Octahedral): [PdCl2(PPh3)2] is square planar (dsp2) of type MA2B2, so it exhibits cis and trans isomers. [Co(en)(NH3)2Cl2]+ is octahedral and shows geometrical isomers (cis and trans-dichloro).",
+      "Hint 3 (Ionization Isomers): Ionization isomers give different ions in aqueous solution: [Co(NH3)5Cl]SO4 gives SO4(2-) precipitate with BaCl2, while [Co(NH3)5(SO4)]Cl gives AgCl precipitate with AgNO3."
+    ],
+    "explanation": "1. Analysis of Set-I (Geometrical Isomerism):\n- [Ni(CO)4] is tetrahedral (sp3) with 109.5° angles; tetrahedral complexes do NOT exhibit cis/trans isomerism. This eliminates options (B) and (C).\n- [PdCl2(PPh3)2] is square planar (Pd2+ is a 4d8 metal, always square planar with strong crystal field). As an MA2B2 system, it exhibits distinct cis and trans isomers.\n- [Co(en)(NH3)2Cl2]+ is an octahedral coordination complex of type M(AA)B2C2, which possesses multiple geometrical diastereomers (cis-Cl, trans-Cl).\n- [Pt(NH3)3Cl]+ is MA3B square planar and has only 1 arrangement (no cis/trans).\n\n2. Analysis of Set-II (Ionization Isomerism):\n- [Co(NH3)5Cl]SO4 has Cl- inside coordination sphere and SO4(2-) outside as counter-ion.\n- [Co(NH3)5(SO4)]Cl has SO4(2-) inside coordination sphere and Cl- outside as counter-ion.\nThese two exchange ion roles in solution and are classical ionization isomers.\n\nTherefore, option (A) is completely correct.",
+    "teach_3d": {
+      "title": "3D Coordination Isomerism: Square Planar and Octahedral Complexes",
+      "reaction_type": "COORDINATION_OCTAHEDRAL",
+      "reactants": [
+        {"name": "cis-Dichlorobis(triphenylphosphine)palladium(II)", "smiles": "Cl[Pd](Cl)(P(c1ccccc1)(c2ccccc2)c3ccccc3)P(c4ccccc4)(c5ccccc5)c6ccccc6"},
+        {"name": "Pentaamminechlorocobalt(III) Sulfate", "smiles": "N[Co](N)(N)(N)(N)Cl.[O-]S(=O)(=O)[O-]"}
+      ],
+      "products": [
+        {"name": "trans-Dichlorobis(triphenylphosphine)palladium(II)", "smiles": "Cl[Pd](P(c1ccccc1)(c2ccccc2)c3ccccc3)(Cl)P(c4ccccc4)(c5ccccc5)c6ccccc6"},
+        {"name": "Pentaamminesulfatocobalt(III) Chloride", "smiles": "N[Co](N)(N)(N)(N)OS(=O)(=O)[O-].[Cl-]"}
+      ],
+      "stages": [
+        "1. Square Planar Geometry: Pd(II) 4d8 metal center adopts rigid dsp2 90° planar orientation.",
+        "2. Cis vs Trans Configuration: In cis isomer, both chlorine ligands are separated by 90°; in trans isomer, they oppose each other at 180°.",
+        "3. Octahedral Ligand Sphere: Co(III) 3d6 center coordinates 6 donor atoms at exactly 90° and 180° vertices.",
+        "4. Ionization Exchange: Sulfate counter-ion enters the first coordination sphere, displacing coordinated chloride into solution."
+      ],
+      "spatial_insight": "Rotate the 3D model to see how the 90° Cl-Pd-Cl angle in cis changes to a linear 180° vector in trans. Notice how tetrahedral geometry (109.5°) keeps all ligand distances identical, preventing geometrical isomerism."
+    }
+  },
+  {
+    "id": "jee_2024_p1_q9",
+    "year": 2024,
+    "paper": "Paper 1",
+    "category": "Physical Chemistry",
+    "topic": "Chemical Kinetics: Multistep Mechanism & Reaction Order",
+    "difficulty": "Moderate",
+    "question": "Consider the reaction: 2H2(g) + 2NO(g) -> N2(g) + 2H2O(g), which proceeds via the following elementary steps:\nStep 1 (Fast equilibrium): 2NO(g) <=> N2O2(g) [Equilibrium constant K1]\nStep 2 (Slow, rate-determining): N2O2(g) + H2(g) -> N2O(g) + H2O(g) [Rate constant k2]\nStep 3 (Fast): N2O(g) + H2(g) -> N2(g) + H2O(g) [Rate constant k3]\nWhat is the overall order of the reaction with respect to NO, H2, and the total order?",
+    "options": [
+      "(A) Order in NO = 2, Order in H2 = 1, Overall Order = 3",
+      "(B) Order in NO = 1, Order in H2 = 1, Overall Order = 2",
+      "(C) Order in NO = 2, Order in H2 = 2, Overall Order = 4",
+      "(D) Order in NO = 1, Order in H2 = 2, Overall Order = 3"
+    ],
+    "correct_option": "A",
+    "hints": [
+      "Hint 1 (Rate Determining Step): The rate of a multi-step reaction is governed entirely by the slowest elementary step (Step 2).",
+      "Hint 2 (Eliminate Intermediates): Step 2 rate law is Rate = k2 [N2O2][H2]. However, N2O2 is an unstable intermediate and cannot appear in the empirical rate law.",
+      "Hint 3 (Equilibrium Substitution): From fast Step 1, K1 = [N2O2] / [NO]^2, so [N2O2] = K1 [NO]^2. Substituting gives Rate = k2 K1 [NO]^2 [H2]."
+    ],
+    "explanation": "1. The rate determining step (RDS) is the slowest elementary step (Step 2):\n   Rate = k2 [N2O2] [H2]\n\n2. N2O2 is a reactive intermediate. From the fast pre-equilibrium in Step 1:\n   K1 = [N2O2] / [NO]^2\n   => [N2O2] = K1 [NO]^2\n\n3. Substitute [N2O2] into the RDS rate expression:\n   Rate = k2 * (K1 [NO]^2) * [H2] = k_eff [NO]^2 [H2]^1\n\n4. Thus:\n   - Order with respect to NO = 2\n   - Order with respect to H2 = 1\n   - Overall order of reaction = 2 + 1 = 3 (Third order reaction).\nTherefore, option (A) is correct.",
+    "teach_3d": {
+      "title": "3D Reaction Mechanism: Dimeric N2O2 Intermediate & Transition State",
+      "reaction_type": "KINETICS_COLLISION",
+      "reactants": [
+        {"name": "Nitric Oxide (NO)", "smiles": "[N]=O"},
+        {"name": "Hydrogen (H2)", "smiles": "[H][H]"}
+      ],
+      "products": [
+        {"name": "Dinitrogen (N2)", "smiles": "N#N"},
+        {"name": "Water (H2O)", "smiles": "O"}
+      ],
+      "stages": [
+        "1. Dimerization: Two NO radical molecules collide to form planar trapezoidal dinitrogen dioxide (N2O2) intermediate.",
+        "2. Collision with H2: Incoming H-H molecule collides with N2O2 along the activation barrier pathway.",
+        "3. Transition State: Bonds N-O stretch while H-O bonds begin forming in an activated pentatomic complex.",
+        "4. Intermediate Cleavage: Formation of N2O and H2O, followed by instant second reduction of N2O to stable N2."
+      ],
+      "spatial_insight": "Notice how the rate depends quadratically on NO concentration because two NO molecules must dimerize before the rate-limiting collision with H2 can occur."
+    }
+  },
+  {
+    "id": "jee_2023_p1_q2",
+    "year": 2023,
+    "paper": "Paper 1",
+    "category": "Organic Chemistry",
+    "topic": "Nucleophilic Substitution (SN2) vs Elimination (E2)",
+    "difficulty": "Moderate",
+    "question": "When 2-bromobutane is treated with aqueous KOH, the major product is P. When the same 2-bromobutane is treated with hot alcoholic KOH, the major product is Q. What are P and Q?",
+    "options": [
+      "(A) P = 2-butanol (butan-2-ol); Q = but-2-ene",
+      "(B) P = but-1-ene; Q = 2-butanol",
+      "(C) P = but-2-ene; Q = 1-butanol",
+      "(D) P = 1-bromobutane; Q = but-2-yne"
+    ],
+    "correct_option": "A",
+    "hints": [
+      "Hint 1 (Aqueous vs Alcoholic KOH): Aqueous KOH contains heavily hydrated OH- ions which act primarily as a nucleophile (substitution). Alcoholic KOH contains alkoxide (EtO-) ions which act as a strong base (elimination).",
+      "Hint 2 (Substitution Product): Aqueous KOH replaces the -Br atom with an -OH group via nucleophilic substitution (SN2/SN1), giving the secondary alcohol butan-2-ol.",
+      "Hint 3 (Saytzeff Elimination): Alcoholic KOH removes H+ from the more substituted beta-carbon to produce the more substituted, thermodynamically stable alkene (Saytzeff rule: but-2-ene)."
+    ],
+    "explanation": "1. With aqueous KOH:\nWater strongly solvates the hydroxide ion with hydrogen bonds, reducing its basicity while preserving its nucleophilicity. 2-bromobutane undergoes nucleophilic substitution to yield butan-2-ol (P):\nCH3-CH(Br)-CH2-CH3 + OH-(aq) -> CH3-CH(OH)-CH2-CH3 + Br-\n\n2. With alcoholic KOH (KOH in EtOH):\nPotassium ethoxide (EtO-K+) is generated, which is a strong, poorly solvated base. It abstracts a beta-hydrogen in a concerted E2 elimination. According to Saytzeff (Zaitsev) rule, elimination preferentially removes hydrogen from the beta-carbon with fewer hydrogens to yield the more substituted alkene (but-2-ene, Q):\nCH3-CH(Br)-CH2-CH3 + alc. KOH -> CH3-CH=CH-CH3 (cis + trans but-2-ene major) + KBr + H2O.\nTherefore, P = 2-butanol and Q = but-2-ene (Option A).",
+    "teach_3d": {
+      "title": "3D Nucleophilic Substitution vs Anti-Periplanar E2 Elimination",
+      "reaction_type": "SN2_AND_E2",
+      "reactants": [
+        {"name": "2-Bromobutane", "smiles": "CCC(C)Br"},
+        {"name": "Hydroxide / Ethoxide", "smiles": "[OH-]"}
+      ],
+      "products": [
+        {"name": "Butan-2-ol (P)", "smiles": "CCC(C)O"},
+        {"name": "But-2-ene (Q)", "smiles": "CC=CC"}
+      ],
+      "stages": [
+        "1. Conformation: 2-Bromobutane rotates around C2-C3 bond to align beta-hydrogen anti-periplanar (180°) to the C-Br bond.",
+        "2. Pathway Fork: Aqueous OH- attacks C2 backside (SN2); alcoholic base abstracts anti-periplanar beta-H (E2).",
+        "3. Transition State: For E2, C-H and C-Br bonds simultaneously cleave while C2=C3 pi overlap develops.",
+        "4. Product Geometry: Saturated tetrahedral alcohol formed for P; planar sp2 double-bonded but-2-ene formed for Q."
+      ],
+      "spatial_insight": "Rotate the 3D model to inspect the strict 180° anti-periplanar dihedral angle between beta-hydrogen and the leaving Bromine atom required for E2 transition state pi overlap."
+    }
+  },
+  {
+    "id": "jee_2023_p1_q7",
+    "year": 2023,
+    "paper": "Paper 1",
+    "category": "Organic Chemistry",
+    "topic": "Ether Cleavage with Hydroiodic Acid (HI)",
+    "difficulty": "Moderate",
+    "question": "When anisole (methoxybenzene, Ph-O-CH3) is heated with 1 equivalent of concentrated hydroiodic acid (HI), the products obtained are:",
+    "options": [
+      "(A) Phenol (Ph-OH) and Methyl Iodide (CH3I)",
+      "(B) Iodobenzene (Ph-I) and Methanol (CH3OH)",
+      "(C) Benzene and Methyl hypoiodite",
+      "(D) Iodobenzene and Methyl Iodide"
+    ],
+    "correct_option": "A",
+    "hints": [
+      "Hint 1 (Protonation): The first step is protonation of the ether ethereal oxygen by H+ from HI to form an oxonium ion (Ph-O+(H)-CH3).",
+      "Hint 2 (Bond Strengths): The phenyl-oxygen bond (Ph-O) has partial double bond character due to resonance with the benzene ring and has sp2 hybridization, making it extremely strong.",
+      "Hint 3 (SN2 Attack): The iodide ion (I-) can only attack the less sterically hindered sp3 methyl carbon via SN2, cleaving the C(sp3)-O bond to release phenol and methyl iodide."
+    ],
+    "explanation": "1. Anisole reacts with HI:\nFirst, ethereal oxygen is protonated by HI to give [Ph-O+(H)-CH3] I-.\n\n2. Resonance in Anisole:\nThe lone pair of electrons on the oxygen atom is delocalized over the aromatic benzene ring:\nPh-O-CH3 <-> Ph(=O+)-CH3\nThis gives the C(aromatic)-O bond partial double-bond character (bond length 1.36 Å vs 1.43 Å for aliphatic C-O), making it far too strong to be broken by I-.\n\n3. Nucleophilic attack:\nIodide (I-) attacks the sp3 hybridized methyl carbon via an SN2 displacement:\nI- + CH3-O+(H)-Ph -> CH3I + Ph-OH\nTherefore, the products are Phenol and Methyl Iodide (Option A). Iodobenzene is NOT formed.",
+    "teach_3d": {
+      "title": "3D Mechanism: Selective Ether Cleavage of Anisole by HI",
+      "reaction_type": "SN2",
+      "reactants": [
+        {"name": "Anisole", "smiles": "COc1ccccc1"},
+        {"name": "Hydrogen Iodide", "smiles": "I"}
+      ],
+      "products": [
+        {"name": "Phenol", "smiles": "Oc1ccccc1"},
+        {"name": "Methyl Iodide", "smiles": "CI"}
+      ],
+      "stages": [
+        "1. Protonation: HI protonates the ether oxygen lone pair, creating a positive oxonium ion.",
+        "2. Partial Double Bond: Oxygen p-orbital overlaps with aromatic pi cloud, locking the C(aryl)-O bond rigid and flat.",
+        "3. Backside SN2: Bulky iodide ion attacks the exposed methyl carbon from 180° opposite the oxonium oxygen.",
+        "4. Bond Cleavage: The C(methyl)-O bond breaks, releasing neutral planar Phenol and Methyl Iodide."
+      ],
+      "spatial_insight": "Notice in 3D how the phenyl ring shields the aromatic carbon from backside nucleophilic attack, while the methyl group is completely exposed to backside SN2 attack by iodide."
+    }
+  },
+  {
+    "id": "jee_2022_p1_q5",
+    "year": 2022,
+    "paper": "Paper 1",
+    "category": "Inorganic Chemistry",
+    "topic": "Disproportionation of White Phosphorus (P4)",
+    "difficulty": "Moderate",
+    "question": "When white phosphorus (P4) is dissolved in boiling aqueous sodium hydroxide (NaOH) solution in an inert atmosphere of CO2, a poisonous gas P and a salt Q are formed. What are P and Q, and what type of reaction is this?",
+    "options": [
+      "(A) P = Phosphine (PH3) and Q = Sodium hypophosphite (NaH2PO2); Disproportionation reaction",
+      "(B) P = Phosphorus trichloride (PCl3) and Q = Sodium phosphate (Na3PO4); Displacement reaction",
+      "(C) P = Diphosphine (P2H4) and Q = Sodium phosphite (Na2HPO3); Decomposition reaction",
+      "(D) P = Phosphine (PH3) and Q = Sodium phosphate (Na3PO4); Non-redox neutralization"
+    ],
+    "correct_option": "A",
+    "hints": [
+      "Hint 1 (Reagent): Boiling P4 in aqueous alkaline medium (NaOH + H2O) is the laboratory preparation of phosphine gas (PH3).",
+      "Hint 2 (Oxidation States): In elemental P4, the oxidation state of phosphorus is 0. In PH3 it is -3, and in NaH2PO2 it is +1.",
+      "Hint 3 (Disproportionation): Because the same element (P) is simultaneously reduced (0 -> -3) and oxidized (0 -> +1), this is a classic disproportionation reaction."
+    ],
+    "explanation": "The laboratory preparation of phosphine involves boiling white phosphorus with conc. NaOH in an inert atmosphere:\nP4(s) + 3NaOH(aq) + 3H2O(l) -> PH3(g) + 3NaH2PO2(aq)\n\nOxidation State Analysis:\n- Elemental P4: P has oxidation state = 0\n- In PH3: P has oxidation state = -3 (Reduction: 0 -> -3)\n- In NaH2PO2 (sodium hypophosphite): P has oxidation state = +1 (Oxidation: 0 -> +1)\n\nSince phosphorus is simultaneously oxidized and reduced, this is a Disproportionation reaction. P is PH3 and Q is NaH2PO2 (Option A).",
+    "teach_3d": {
+      "title": "3D Strained P4 Tetrahedron Cleavage to Trigonal Pyramidal PH3",
+      "reaction_type": "DISPROPORTIONATION",
+      "reactants": [
+        {"name": "White Phosphorus (P4)", "smiles": "P12P3P1P23"},
+        {"name": "Hydroxide / Water", "smiles": "[OH-]"}
+      ],
+      "products": [
+        {"name": "Phosphine (PH3)", "smiles": "P"},
+        {"name": "Hypophosphite Anion", "smiles": "[O-]P(=O)O"}
+      ],
+      "stages": [
+        "1. Strained Cage: White P4 exists as a regular tetrahedron with acute 60° P-P-P bond angles, causing tremendous ring strain (100 kJ/mol).",
+        "2. Hydroxide Attack: OH- nucleophile attacks an electrophilic P atom, breaking the first strained P-P bond.",
+        "3. Proton Transfers: Successive proton transfers from water reduce three P vertices to monomeric PH3.",
+        "4. Product Relief: Pyramidal PH3 (bond angle 93.5°) escapes as gas, while the oxidized P center stabilizes as hypophosphite anion."
+      ],
+      "spatial_insight": "Examine the 3D tetrahedral P4 molecule. The deviation from preferred 109.5° sp3 or 90° p-orbital angles to 60° creates banana-like bent bonds that make white phosphorus spontaneously reactive."
+    }
+  },
+  {
+    "id": "jee_2022_p1_q14",
+    "year": 2022,
+    "paper": "Paper 1",
+    "category": "Organic Chemistry",
+    "topic": "Aldol Condensation & Dehydration",
+    "difficulty": "Moderate",
+    "question": "When acetaldehyde (ethanal, CH3CHO) is treated with dilute NaOH followed by heating, the final major product formed is:",
+    "options": [
+      "(A) But-2-enal (Crotonaldehyde, CH3-CH=CH-CHO)",
+      "(B) Butan-1-ol (CH3-CH2-CH2-CH2OH)",
+      "(C) Ethyl acetate (CH3COOCH2CH3)",
+      "(D) 3-hydroxybutanoic acid"
+    ],
+    "correct_option": "A",
+    "hints": [
+      "Hint 1 (Enolate Formation): Dilute base abstracts an alpha-hydrogen from one acetaldehyde molecule to form a resonance-stabilized enolate anion [CH2=CH-O]-.",
+      "Hint 2 (Nucleophilic Addition): The enolate attacks the electrophilic carbonyl carbon of a second acetaldehyde molecule to form a beta-hydroxyaldehyde (aldol: 3-hydroxybutanal).",
+      "Hint 3 (Heat & Conjugation): Upon heating (Delta), dehydration occurs with loss of water to generate a stable, conjugated alpha,beta-unsaturated aldehyde: but-2-enal (crotonaldehyde)."
+    ],
+    "explanation": "Reaction Sequence (Aldol Condensation):\nStep 1: Deprotonation\nCH3CHO + OH- <=> [:CH2-CHO]- + H2O (enolate formation)\n\nStep 2: Nucleophilic Addition\nCH3-CH=O + [:CH2-CHO]- -> CH3-CH(O-)-CH2-CHO\nProtonation by water yields 3-hydroxybutanal (aldol):\nCH3-CH(OH)-CH2-CHO\n\nStep 3: Dehydration on heating (Delta)\nHeating drives the elimination of water. Because the resulting C=C double bond is in conjugation with the carbonyl group (extended pi delocalization), dehydration is extremely facile:\nCH3-CH(OH)-CH2-CHO -> CH3-CH=CH-CHO (but-2-enal / crotonaldehyde) + H2O.\nTherefore, option (A) is the correct answer.",
+    "teach_3d": {
+      "title": "3D Mechanism: Self-Aldol Addition and Conjugated Elimination",
+      "reaction_type": "ALDOL_CONDENSATION",
+      "reactants": [
+        {"name": "Acetaldehyde (Ethanal)", "smiles": "CC=O"},
+        {"name": "Acetaldehyde Enolate", "smiles": "[CH2-]C=O"}
+      ],
+      "products": [
+        {"name": "Crotonaldehyde (But-2-enal)", "smiles": "CC=CC=O"},
+        {"name": "Water", "smiles": "O"}
+      ],
+      "stages": [
+        "1. Nucleophilic Addition: Planar enolate attacks the trigonal planar (sp2) carbonyl carbon of the second acetaldehyde molecule.",
+        "2. Tetrahedral Intermediate: C=O pi bond opens, forming a new C-C single bond and an alkoxide intermediate.",
+        "3. Aldol Formation: Protonation yields 3-hydroxybutanal.",
+        "4. E1cb Dehydration: Loss of alpha-H and beta-OH yields the trans-coplanar conjugated crotonaldehyde pi system."
+      ],
+      "spatial_insight": "Look at the trans-coplanar arrangement of but-2-enal in 3D: the C=C and C=O double bonds lie in the exact same plane, maximizing p-orbital overlap across all four carbon-oxygen centers."
+    }
+  }
+]
+

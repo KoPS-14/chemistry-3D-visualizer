@@ -1,6 +1,7 @@
+
 import React from 'react';
 
-export type NavTab = 'dashboard' | 'elements' | 'molecules' | 'reactions' | 'chat';
+export type NavTab = 'dashboard' | 'elements' | 'molecules' | 'reactions' | 'custom-lab' | 'quiz' | 'chat';
 
 interface NavbarProps {
   activeTab: NavTab;
@@ -18,6 +19,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'elements', label: 'Periodic Table', icon: '⚛️' },
     { id: 'molecules', label: 'Molecules', icon: '🧪' },
     { id: 'reactions', label: 'Reactions', icon: '🔥' },
+    { id: 'custom-lab', label: 'Custom Lab', icon: '⚗️' },
+    { id: 'quiz', label: 'JEE Quiz', icon: '📝' },
     { id: 'chat', label: 'AI Assistant', icon: '🤖' },
   ];
 

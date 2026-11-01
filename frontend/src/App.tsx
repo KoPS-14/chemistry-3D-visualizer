@@ -14,6 +14,8 @@ import { ReactionAnimationViewer } from './components/ReactionAnimationViewer';
 import { ReactionTimelineControls } from './components/ReactionTimelineControls';
 import { ReactionConditionsControl } from './components/ReactionConditionsControl';
 import { ChemistryChatbotView } from './components/ChemistryChatbotView';
+import { CustomReactionLab } from './components/CustomReactionLab';
+import { JEEQuizView } from './components/JEEQuizView';
 import { ContextualAI } from './components/ContextualAI';
 import { calculateAnimationFrameState } from './three/animateReaction';
 import {
@@ -231,9 +233,13 @@ export const App: React.FC = () => {
         );
         if (found) handleSelectElement(found);
       }
+    } else if (targetTab === 'quiz' || targetTab === 'custom-lab') {
+      setActiveTab(targetTab);
     } else {
       setActiveTab(targetTab);
-      handlePromptSubmit(promptOrSearch);
+      if (promptOrSearch && promptOrSearch.trim()) {
+        handlePromptSubmit(promptOrSearch);
+      }
     }
   };
 
@@ -496,6 +502,24 @@ export const App: React.FC = () => {
               initialPrompt={pendingChatQuestion}
               onPromptHandled={() => setPendingChatQuestion(null)}
             />
+          </section>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 6: CUSTOM REACTION LAB                                */}
+        {/* ========================================================= */}
+        {activeTab === 'custom-lab' && (
+          <section className="w-full">
+            <CustomReactionLab />
+          </section>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 7: JEE CHEMISTRY QUIZ & 3D TUTOR                      */}
+        {/* ========================================================= */}
+        {activeTab === 'quiz' && (
+          <section className="w-full">
+            <JEEQuizView />
           </section>
         )}
       </main>
